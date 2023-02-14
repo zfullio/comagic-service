@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+import "api/grpc/type/date.proto";
+
+option go_package = "./pb";
+
+service ComagicService {
+  rpc PushCallsToBQ(PushCallsToBQRequest) returns(PushCallsToBQResponse);
+  rpc GetCampaigns(GetCampaignsRequest) returns(GetCampaignsResponse);
+  rpc GetCampaignsConditions(GetCampaignsConditionsRequest) returns(GetCampaignsConditionsResponse);
+}
+
+message BqConfig{
+  string projectID = 1;
+  string datasetID = 2;
+  string tableID = 3;
+  string serviceKey = 4;
+}
+message CsConfig{
+  string serviceKey = 1;
+  string bucketName = 2;
+}
+
+message PushCallsToBQRequest{
+  string comagicToken = 1;
+  BqConfig bqConfig = 2;
+  CsConfig csConfig = 3;
+  google.type.Date dateFrom = 4;
+  google.type.Date dateTill = 5;
+}
+message PushCallsToBQResponse{
+  bool isOK = 1;
+}
+
+message GetCampaignsRequest{
+  string comagicToken = 1;
+}
+message GetCampaignsResponse{
+
+}
+
+message GetCampaignsConditionsRequest{
+  string comagicToken = 1;
+}
+message GetCampaignsConditionsResponse{
+
+}
+
+
+
