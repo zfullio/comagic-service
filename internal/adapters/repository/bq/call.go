@@ -4,6 +4,7 @@ import (
 	"cloud.google.com/go/bigquery"
 	"context"
 	"fmt"
+	"github.com/rs/zerolog"
 	"time"
 )
 
@@ -11,62 +12,53 @@ type callRepository struct {
 	db        bigquery.Client
 	datasetID string
 	tableID   string
+	logger    *zerolog.Logger
 }
 
-func NewCallRepository(client bigquery.Client, datasetID string, tableID string) *callRepository {
+func NewCallRepository(client bigquery.Client, datasetID string, tableID string, logger *zerolog.Logger) *callRepository {
+	repoLogger := logger.With().Str("repo", "call").Str("type", "bigquery").Logger()
+
 	return &callRepository{
 		db:        client,
 		datasetID: datasetID,
 		tableID:   tableID,
+		logger:    &repoLogger,
 	}
 }
 
+func (cr callRepository) CreateTable(ctx context.Context) (err error) {
+	cr.logger.Trace().Msgf("createTable: %v.%v", cr.datasetID, cr.tableID)
+
+	myDataset := cr.db.Dataset(cr.datasetID)
+	err = CreateTable(ctx, CallDTO{}, myDataset, cr.tableID)
+	if err != nil {
+		return fmt.Errorf("createTable: %w", err)
+	}
+	return nil
+}
+
 func (cr callRepository) DeleteByDateColumn(ctx context.Context, dateColumn string, dateStart time.Time, dateFinish time.Time) (err error) {
-	q := cr.db.Query(`DELETE FROM ` + fmt.Sprintf(" %s.%s ", cr.datasetID, cr.tableID) +
-		`WHERE ` + fmt.Sprintf("%s >= '%s' AND %s <= '%s'", dateColumn, dateStart.Format(time.DateOnly),
-		dateColumn, dateFinish.Format(time.DateOnly)))
+	cr.logger.Trace().Msgf("deleteByDateColumn: %v.%v", cr.datasetID, cr.tableID)
 
-	job, err := q.Run(ctx)
+	err = DeleteByDateColumn(ctx, cr.db, cr.datasetID, cr.tableID, dateColumn, dateStart, dateFinish)
 	if err != nil {
-		return err
-	}
-
-	status, err := job.Wait(ctx)
-	if err != nil {
-		return err
-	}
-
-	if err := status.Err(); err != nil {
-		return err
+		return fmt.Errorf("DeleteByDateColumn: %w", err)
 	}
 
 	return err
 }
 
 func (cr callRepository) SendFromCS(ctx context.Context, bucket string, object string) (err error) {
-	schema, err := bigquery.InferSchema(CallDTO{})
-	if err != nil {
-		return fmt.Errorf("bigquery.InferSchema: %w", err)
-	}
+	cr.logger.Trace().Msgf("sendFromCS: %v.%v", cr.datasetID, cr.tableID)
 
 	myDataset := cr.db.Dataset(cr.datasetID)
+	table := myDataset.Table(cr.tableID)
 
-	gcsRef := bigquery.NewGCSReference(fmt.Sprintf("gs://%s/%s", bucket, object))
-
-	gcsRef.SourceFormat = bigquery.CSV
-	gcsRef.FieldDelimiter = "|"
-	gcsRef.SkipLeadingRows = 1
-	gcsRef.AllowJaggedRows = true
-	gcsRef.AllowQuotedNewlines = true
-
-	gcsRef.Schema = schema
-	loader := myDataset.Table(cr.tableID).LoaderFrom(gcsRef)
-	loader.CreateDisposition = bigquery.CreateNever
-	loader.WriteDisposition = bigquery.WriteAppend
-	_, err = loader.Run(ctx)
+	err = SendFromCS(ctx, CallDTO{}, table, bucket, object)
 	if err != nil {
-		return fmt.Errorf("loader error: %w", err)
+		return fmt.Errorf("SendFromCS: %w", err)
 	}
+
 	return err
 }
 

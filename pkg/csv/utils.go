@@ -8,25 +8,27 @@ import (
 	"time"
 )
 
-func GenerateFile(data any, name string) (err error) {
-	csvFile, err := os.Create(name)
+func GenerateFile(data any, name string) (filename string, err error) {
+	t := time.Now()
+	pattern := fmt.Sprintf("%s_%s_*.csv", name, t.Format("2006-01-02 15:04:05"))
+
+	csvFile, err := os.CreateTemp("", pattern)
 	if err != nil {
 		log.Fatalf("failed creating file: %s", err)
 	}
-	csvFile.Close()
+
+	err = csvFile.Close()
+	if err != nil {
+		return "", err
+	}
 
 	options := csvtag.CsvOptions{
 		Separator: '|',
 	}
-	err = csvtag.DumpToFile(data, name, options)
+	err = csvtag.DumpToFile(data, csvFile.Name(), options)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return err
-}
 
-func GenerateFilename(name string) string {
-	t := time.Now()
-	filename := fmt.Sprintf("%s %s.csv", name, t.Format("2006-01-02 15:04:05"))
-	return filename
+	return csvFile.Name(), nil
 }

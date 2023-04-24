@@ -4,23 +4,33 @@ import (
 	"Comagic/internal/domain/entity"
 	cm "Comagic/pkg/comagic"
 	"fmt"
+	"github.com/rs/zerolog"
 	"strings"
 	"time"
 )
 
 type callRepository struct {
 	client cm.Client
+	logger *zerolog.Logger
 }
 
-func NewCallRepository(tracking cm.Client) *callRepository {
-	return &callRepository{client: tracking}
+func NewCallRepository(tracking cm.Client, logger *zerolog.Logger) *callRepository {
+	cmLogger := logger.With().Str("repo", "call").Str("type", "comagic").Logger()
+
+	return &callRepository{
+		client: tracking,
+		logger: &cmLogger,
+	}
 }
 
 func (cr callRepository) GetByDate(dateFrom time.Time, dateTill time.Time, fields []string) (calls []entity.Call, err error) {
+	cr.logger.Trace().Msgf("GetByDate: %v -- %v", dateFrom.Format(time.DateOnly), dateTill.Format(time.DateOnly))
+
 	callsFromRepo, err := cr.client.GetCallsReport(dateFrom, dateTill, fields)
 	if err != nil {
-		return calls, fmt.Errorf("ошибка получения получения звонков: %w", err)
+		return calls, fmt.Errorf("ошибка получения звонков: %w", err)
 	}
+
 	t := time.Now()
 	for i := 0; i < len(callsFromRepo); i++ {
 		item := newCall(callsFromRepo[i], t)

@@ -22,6 +22,5 @@ bin
 go.work
 
 # Config files
-cli_config.yml
-schedule_config.yml
+*config.yml
 .env

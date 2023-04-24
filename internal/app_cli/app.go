@@ -21,40 +21,46 @@ import (
 type Entity int
 
 type App struct {
-	logger      *zerolog.Logger
-	cfg         *config.CliConfig
-	callSrv     service.CallService
-	campaignSrv service.CampaignService
-	Notify      notify.Notifier
+	logger        *zerolog.Logger
+	cfg           *config.CliConfig
+	callSrv       service.CallService
+	campaignSrv   service.CampaignService
+	offMessageSrv service.OfflineMessageService
+	Notify        notify.Notifier
 }
 
 func NewApp(ctx context.Context, cfg *config.CliConfig, token string, logger *zerolog.Logger, notify notify.Notifier) *App {
 	clComagic := cm.NewClient(cm.DataAPI, cfg.Comagic.Version, token)
-	cmCallRepo := comagic.NewCallRepository(*clComagic)
-	cmCampaignRepo := comagic.NewCampaignRepository(*clComagic)
+	cmCallRepo := comagic.NewCallRepository(*clComagic, logger)
+	cmCampaignRepo := comagic.NewCampaignRepository(*clComagic, logger)
+	cmOfflineMessageRepo := comagic.NewOfflineMessageRepository(*clComagic, logger)
 
 	bqClient, err := bigquery.NewClient(context.Background(), cfg.BQ.ProjectID, option.WithCredentialsFile(cfg.BQ.ServiceKeyPath))
 	if err != nil {
 		log.Fatalf("ошибка получения клиента Big Query: %s", err)
 	}
-	bqCallRepo := bq.NewCallRepository(*bqClient, cfg.CallReport.DatasetID, cfg.CallReport.TableID)
-	bqCampaignRepo := bq.NewCampaignRepository(*bqClient, cfg.CallReport.DatasetID, cfg.CallReport.TableID)
+	bqCallRepo := bq.NewCallRepository(*bqClient, cfg.CallReport.DatasetID, cfg.CallReport.TableID, logger)
+	bqCampaignRepo := bq.NewCampaignRepository(*bqClient, cfg.CallReport.DatasetID, cfg.CallReport.TableID, logger)
+	bqOfflineMessageRepo := bq.NewOfflineMessageRepository(*bqClient, cfg.CallReport.DatasetID, cfg.CallReport.TableID, logger)
 
 	csClient, err := storage.NewClient(ctx, option.WithCredentialsFile(cfg.CS.ServiceKeyPath))
 	if err != nil {
 		log.Fatalf("ошибка получения клиента Cloud Storage: %s", err)
 	}
-	csCallRepo := cs.NewCallRepository(*csClient, cfg.BucketName)
+	csCallRepo := cs.NewCallRepository(*csClient, cfg.BucketName, logger)
+	csOfflineMessageRepo := cs.NewOfflineMessageRepository(*csClient, cfg.BucketName, logger)
 
 	callSrv := service.NewCallService(cmCallRepo, bqCallRepo, csCallRepo, logger)
 	campaignSrv := service.NewCampaignService(cmCampaignRepo, bqCampaignRepo, logger)
+	offlineMessagesSrv := service.NewOfflineMessageService(cmOfflineMessageRepo, bqOfflineMessageRepo, csOfflineMessageRepo, logger)
 
 	return &App{
-		logger:      logger,
-		cfg:         cfg,
-		callSrv:     *callSrv,
-		campaignSrv: *campaignSrv,
-		Notify:      notify,
+		logger:        logger,
+		cfg:           cfg,
+		callSrv:       *callSrv,
+		campaignSrv:   *campaignSrv,
+		offMessageSrv: *offlineMessagesSrv,
+		Notify:        notify,
 	}
 }
 
@@ -82,6 +88,95 @@ func (a App) PushCallsToBQ(dateFrom time.Time, dateTill time.Time) (err error) {
 	}
 
 	err = a.callSrv.PushCallsToBQ(dateFrom, dateTill, fields, a.cfg.BucketName)
+	if err != nil {
+		return fmt.Errorf("не могу выполнить запрос: %s", err)
+	}
+	return err
+}
+
+func (a App) PushOfflineMessagesToBQ(dateFrom time.Time, dateTill time.Time) (err error) {
+	_ = a.Notify.Send(context.Background(), "Comagic", fmt.Sprintf("PushOfflineMessagesToBQ: %s.%s.%s", a.cfg.BQ.ProjectID,
+		a.cfg.CallReport.DatasetID, a.cfg.CallReport.TableID))
+	a.logger.Info().Msg("Get offline messages")
+	fields := []string{
+		"id",
+		"date_time",
+		"text",
+		"communication_number",
+		"communication_page_url",
+		"communication_type",
+		"communication_id",
+		"ua_client_id",
+		"ym_client_id",
+		"sale_date",
+		"sale_cost",
+		"status",
+		"process_time",
+		"form_type",
+		"form_name",
+		"search_query",
+		"search_engine",
+		"referrer_domain",
+		"referrer",
+		"entrance_page",
+		"gclid",
+		"yclid",
+		"ymclid",
+		"ef_id",
+		"channel",
+		"employee_id",
+		"employee_full_name",
+		"employee_answer_message",
+		"employee_comment",
+		"tags",
+		"site_id",
+		"site_domain_name",
+		"group_id",
+		"group_name",
+		"campaign_id",
+		"campaign_name",
+		"visit_other_campaign",
+		"visitor_id",
+		"visitor_name",
+		"visitor_phone_number",
+		"visitor_email",
+		"person_id",
+		"visitor_type",
+		"visitor_session_id",
+		"visits_count",
+		"visitor_first_campaign_id",
+		"visitor_first_campaign_name",
+		"visitor_city",
+		"visitor_region",
+		"visitor_country",
+		"visitor_device",
+		"visitor_custom_properties",
+		"segments",
+		"utm_source",
+		"utm_medium",
+		"utm_term",
+		"utm_content",
+		"utm_campaign",
+		"openstat_ad",
+		"openstat_campaign",
+		"openstat_service",
+		"openstat_source",
+		"eq_utm_source",
+		"eq_utm_medium",
+		"eq_utm_term",
+		"eq_utm_content",
+		"eq_utm_campaign",
+		"eq_utm_referrer",
+		"eq_utm_expid",
+		"attributes",
+		"source_id",
+		"source_name",
+		"source_new",
+		"channel_new",
+		"channel_code",
+	}
+
+	err = a.offMessageSrv.PushOfflineMessagesToBQ(dateFrom, dateTill, fields, a.cfg.BucketName)
 	if err != nil {
 		return fmt.Errorf("не могу выполнить запрос: %s", err)
 	}

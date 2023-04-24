@@ -245,7 +245,7 @@ type RespVirtualNumbersInfo struct {
 	} `json:"result"`
 }
 
-func (c *Client) GetSites(userID int64) error {
+func (c *Client) GetSites() error {
 	params := GetRequestParams{
 		AccessToken: c.Token,
 	}
@@ -339,27 +339,35 @@ func (c *Client) GetCallsReport(dateFrom time.Time, dateTill time.Time, fields [
 				Fields:      fields,
 				Offset:      offset,
 			},
-			DateFrom: dateFrom.Format("2006-01-02 15:04:05"),
-			DateTill: dateTill.Format("2006-01-02 15:04:05"),
+			DateFrom: dateFrom.Format(time.DateTime),
+			DateTill: dateTill.Format(time.DateTime),
 		}
 		payload := c.NewPayload(GetCallsReport, params)
 		payloadJSON, err := json.Marshal(payload)
 		if err != nil {
 			return calls, fmt.Errorf("ошибка формирования запроса: %w", err)
 		}
+
 		req, err := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
 		if err != nil {
 			return calls, err
 		}
+
 		req.Header.Add("Content-Type", "application/json")
 		resp, err := c.tr.Do(req)
 		if err != nil {
 			return calls, err
 		}
+
+		if resp.StatusCode != http.StatusOK {
+			return calls, fmt.Errorf("ошибка получения ответа от API: %s", resp.Status)
+		}
+
 		responseBody, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return calls, err
 		}
+
 		var data = RespCallsReport{}
 		data.Result.Data = make([]CallInfo, 0, limit)
 		err = json.Unmarshal(responseBody, &data)
@@ -369,6 +377,7 @@ func (c *Client) GetCallsReport(dateFrom time.Time, dateTill time.Time, fields [
 		if data.Error.Code != 0 {
 			return calls, &data.Error
 		}
+
 		log.Printf("Лимиты: %+v", data.Result.Metadata.Limits)
 		calls = append(calls, data.Result.Data...)
 		receivedPositions = len(calls)
@@ -382,58 +391,72 @@ func (c *Client) GetCallsReport(dateFrom time.Time, dateTill time.Time, fields [
 	return calls, err
 }
 
-//func callsDecode(data string) error {
-//	dec := json.NewDecoder(strings.NewReader(data))
-//	// We expect an object
-//	t, err := dec.Token()
-//	if err != nil {
-//		return err
-//	}
-//	if delim, ok := t.(json.Delim); !ok || delim != '{' {
-//		log.Fatal("Expected object")
-//	}
-//
-//	// Read props
-//	for dec.More() {
-//		t, err = dec.Token()
-//		he(err)
-//		prop := t.(string)
-//		if t != "items" {
-//			var v interface{}
-//			he(dec.Decode(&v))
-//			log.Printf("Property '%s' = %v", prop, v)
-//			continue
-//		}
-//
-//		// It's the "items". We expect it to be an array
-//		t, err := dec.Token()
-//		he(err)
-//		if delim, ok := t.(json.Delim); !ok || delim != '[' {
-//			log.Fatal("Expected array")
-//		}
-//		// Read items (large objects)
-//		for dec.More() {
-//			// Read next item (large object)
-//			lo := LargeObject{}
-//			he(dec.Decode(&lo))
-//			fmt.Printf("Item: %+v\n", lo)
-//		}
-//		// Array closing delim
-//		t, err = dec.Token()
-//		he(err)
-//		if delim, ok := t.(json.Delim); !ok || delim != ']' {
-//			log.Fatal("Expected array closing")
-//		}
-//	}
-//
-//	// Object closing delim
-//	t, err = dec.Token()
-//	he(err)
-//	if delim, ok := t.(json.Delim); !ok || delim != '}' {
-//		log.Fatal("Expected object closing")
-//	}
-//
-//}
+func (c *Client) GetOfflineMessagesReport(dateFrom time.Time, dateTill time.Time, fields []string) (messages []OfflineMessageInfo, err error) {
+	if dateFrom.After(dateTill) {
+		return messages, fmt.Errorf("дата окончания не может быть раньше даты начала")
+	}
+
+	receivedPositions := 0
+	limit := 10000
+	offset := 0
+	for true {
+		params := GetCallsRequestParams{
+			GetRequestParams: GetRequestParams{
+				AccessToken: c.Token,
+				Limit:       limit,
+				Fields:      fields,
+				Offset:      offset,
+			},
+			DateFrom: dateFrom.Format(time.DateTime),
+			DateTill: dateTill.Format(time.DateTime),
+		}
+		payload := c.NewPayload(GetOfflineMessagesReport, params)
+		payloadJSON, err := json.Marshal(payload)
+		if err != nil {
+			return messages, fmt.Errorf("ошибка формирования запроса: %w", err)
+		}
+
+		req, err := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
+		if err != nil {
+			return messages, err
+		}
+
+		req.Header.Add("Content-Type", "application/json")
+		resp, err := c.tr.Do(req)
+		if err != nil {
+			return messages, err
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			return messages, fmt.Errorf("ошибка получения ответа от API: %s", resp.Status)
+		}
+
+		responseBody, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return messages, err
+		}
+
+		var data = RespOfflineMessagesReport{}
+		data.Result.Data = make([]OfflineMessageInfo, 0, limit)
+		err = json.Unmarshal(responseBody, &data)
+		if err != nil {
+			return messages, err
+		}
+		if data.Error.Code != 0 {
+			return messages, &data.Error
+		}
+		//log.Printf("Лимиты: %+v", data.Result.Metadata.Limits)
+		messages = append(messages, data.Result.Data...)
+		receivedPositions = len(messages)
+		log.Printf("Получено %v позиций из %v", receivedPositions, data.Result.Metadata.TotalItems)
+		if receivedPositions < data.Result.Metadata.TotalItems {
+			offset += limit
+		} else {
+			break
+		}
+	}
+	return messages, err
+}
 
 type GetCallsRequestParams struct {
 	GetRequestParams
@@ -446,6 +469,14 @@ type RespCallsReport struct {
 	Result struct {
 		Data     []CallInfo `json:"data"`
 		Metadata Metadata   `json:"metadata"`
+	} `json:"result"`
+}
+
+type RespOfflineMessagesReport struct {
+	Response
+	Result struct {
+		Data     []OfflineMessageInfo `json:"data"`
+		Metadata Metadata             `json:"metadata"`
 	} `json:"result"`
 }
 
@@ -565,4 +596,82 @@ type Employee struct {
 type Segment struct {
 	SegmentId   int64  `json:"segment_id"`
 	SegmentName string `json:"segment_name"`
+}
+
+type OfflineMessageInfo struct {
+	Id                       int64            `json:"id"`
+	DateTime                 string           `json:"date_time"`
+	Text                     string           `json:"text"`
+	CommunicationNumber      int64            `json:"communication_number"`
+	CommunicationPageUrl     string           `json:"communication_page_url"`
+	CommunicationType        string           `json:"communication_type"`
+	CommunicationId          int64            `json:"communication_id"`
+	UaClientId               string           `json:"ua_client_id"`
+	YmClientId               string           `json:"ym_client_id"`
+	SaleDate                 string           `json:"sale_date"`
+	SaleCost                 float64          `json:"sale_cost"`
+	Status                   string           `json:"status"`
+	ProcessTime              string           `json:"process_time"`
+	FormType                 string           `json:"form_type"`
+	FormName                 string           `json:"form_name"`
+	SearchQuery              string           `json:"search_query"`
+	SearchEngine             string           `json:"search_engine"`
+	ReferrerDomain           string           `json:"referrer_domain"`
+	Referrer                 string           `json:"referrer"`
+	EntrancePage             string           `json:"entrance_page"`
+	Gclid                    string           `json:"gclid"`
+	Yclid                    string           `json:"yclid"`
+	Ymclid                   string           `json:"ymclid"`
+	EfId                     string           `json:"ef_id"`
+	Channel                  string           `json:"channel"`
+	EmployeeId               int64            `json:"employee_id"`
+	EmployeeFullName         string           `json:"employee_full_name"`
+	EmployeeAnswerMessage    string           `json:"employee_answer_message"`
+	EmployeeComment          string           `json:"employee_comment"`
+	Tags                     []Tag            `json:"tags"`
+	SiteId                   int64            `json:"site_id"`
+	SiteDomainName           string           `json:"site_domain_name"`
+	GroupId                  int64            `json:"group_id"`
+	GroupName                string           `json:"group_name"`
+	CampaignId               int64            `json:"campaign_id"`
+	CampaignName             string           `json:"campaign_name"`
+	VisitOtherCampaign       bool             `json:"visit_other_campaign"`
+	VisitorId                int64            `json:"visitor_id"`
+	VisitorName              string           `json:"visitor_name"`
+	VisitorPhoneNumber       string           `json:"visitor_phone_number"`
+	VisitorEmail             string           `json:"visitor_email"`
+	PersonId                 int64            `json:"person_id"`
+	VisitorType              string           `json:"visitor_type"`
+	VisitorSessionId         int64            `json:"visitor_session_id"`
+	VisitsCount              int64            `json:"visits_count"`
+	VisitorFirstCampaignId   int64            `json:"visitor_first_campaign_id"`
+	VisitorFirstCampaignName string           `json:"visitor_first_campaign_name"`
+	VisitorCity              string           `json:"visitor_city"`
+	VisitorRegion            string           `json:"visitor_region"`
+	VisitorCountry           string           `json:"visitor_country"`
+	VisitorDevice            string           `json:"visitor_device"`
+	VisitorCustomProperties  []CustomProperty `json:"visitor_custom_properties"`
+	Segments                 []Segment        `json:"segments"`
+	UtmSource                string           `json:"utm_source"`
+	UtmMedium                string           `json:"utm_medium"`
+	UtmTerm                  string           `json:"utm_term"`
+	UtmContent               string           `json:"utm_content"`
+	UtmCampaign              string           `json:"utm_campaign"`
+	OpenstatAd               string           `json:"openstat_ad"`
+	OpenstatCampaign         string           `json:"openstat_campaign"`
+	OpenstatService          string           `json:"openstat_service"`
+	OpenstatSource           string           `json:"openstat_source"`
+	EqUtmSource              string           `json:"eq_utm_source"`
+	EqUtmMedium              string           `json:"eq_utm_medium"`
+	EqUtmTerm                string           `json:"eq_utm_term"`
+	EqUtmContent             string           `json:"eq_utm_content"`
+	EqUtmCampaign            string           `json:"eq_utm_campaign"`
+	EqUtmReferrer            string           `json:"eq_utm_referrer"`
+	EqUtmExpid               string           `json:"eq_utm_expid"`
+	Attributes               []string         `json:"attributes"`
+	SourceId                 int64            `json:"source_id"`
+	SourceName               string           `json:"source_name"`
+	SourceNew                string           `json:"source_new"`
+	ChannelNew               string           `json:"channel_new"`
+	ChannelCode              string           `json:"channel_code"`
 }

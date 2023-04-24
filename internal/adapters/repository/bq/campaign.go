@@ -4,6 +4,7 @@ import (
 	"Comagic/internal/domain/entity"
 	"cloud.google.com/go/bigquery"
 	"context"
+	"github.com/rs/zerolog"
 	"time"
 )
 
@@ -11,13 +12,17 @@ type campaignRepository struct {
 	db        bigquery.Client
 	datasetID string
 	tableID   string
+	logger    *zerolog.Logger
 }
 
-func NewCampaignRepository(client bigquery.Client, datasetID string, tableID string) *campaignRepository {
+func NewCampaignRepository(client bigquery.Client, datasetID string, tableID string, logger *zerolog.Logger) *campaignRepository {
+	repoLogger := logger.With().Str("repo", "campaign").Str("type", "bigquery").Logger()
+
 	return &campaignRepository{
 		db:        client,
 		datasetID: datasetID,
 		tableID:   tableID,
+		logger:    &repoLogger,
 	}
 }
 

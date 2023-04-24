@@ -4,24 +4,35 @@ import (
 	"Comagic/internal/domain/entity"
 	"Comagic/pkg/comagic"
 	"fmt"
+	"github.com/rs/zerolog"
 	"time"
 )
 
 type campaignRepository struct {
 	client comagic.Client
+	logger *zerolog.Logger
 }
 
-func NewCampaignRepository(tracking comagic.Client) *campaignRepository {
-	return &campaignRepository{client: tracking}
+func NewCampaignRepository(tracking comagic.Client, logger *zerolog.Logger) *campaignRepository {
+	cmLogger := logger.With().Str("repo", "campaign").Str("type", "comagic").Logger()
+
+	return &campaignRepository{
+		client: tracking,
+		logger: &cmLogger,
+	}
 }
 
 func (cr *campaignRepository) GetWithFilter(fields []string, filter comagic.Filter) (campaigns []entity.Campaign, err error) {
+	cr.logger.Trace().Msg("GetWithFilter")
+
 	data, err := cr.client.GetCampaigns(fields, filter)
 	if err != nil {
 		return campaigns, fmt.Errorf("ошибка получения кампаний: %w", err)
 	}
+
 	campaignsRepo := data.Result.Data
 	t := time.Now()
+
 	for i := 0; i < len(campaignsRepo); i++ {
 		item := newCampaign(campaignsRepo[i], t)
 		campaigns = append(campaigns, *item)
@@ -38,6 +49,7 @@ func newCampaign(campaign comagic.CampaignInfo, dateUpdate time.Time) *entity.Ca
 		CoverageVisitors:    campaign.DynamicCallTracking.CoverageVisitors,
 	}
 	conditions := make([]entity.GroupCondition, 0)
+
 	for idx, group := range campaign.CampaignConditions.GroupConditions {
 		for _, item := range group {
 			condition := entity.GroupCondition{
@@ -52,6 +64,7 @@ func newCampaign(campaign comagic.CampaignInfo, dateUpdate time.Time) *entity.Ca
 			conditions = append(conditions, condition)
 		}
 	}
+
 	return &entity.Campaign{
 		ID:                  campaign.ID,
 		Status:              campaign.Status,

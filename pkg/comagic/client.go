@@ -79,9 +79,10 @@ func (e *RespError) Error() string {
 type Method string
 
 const (
-	GetAccount        Method = "get.account"
-	GetCampaigns      Method = "get.campaigns"
-	GetVirtualNumbers Method = "get.virtual_numbers"
-	GetSites          Method = "get.sites"
-	GetCallsReport    Method = "get.calls_report"
+	GetAccount               Method = "get.account"
+	GetCampaigns             Method = "get.campaigns"
+	GetVirtualNumbers        Method = "get.virtual_numbers"
+	GetSites                 Method = "get.sites"
+	GetCallsReport           Method = "get.calls_report"
+	GetOfflineMessagesReport Method = "get.offline_messages_report"
 )

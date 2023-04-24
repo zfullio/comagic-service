@@ -30,7 +30,7 @@ func (cfg CliConfig) Check() error {
 		return errors.New("can't find CallReport.TableID")
 	}
 	if cfg.CampaignReport.DatasetID == "" {
-		return errors.New("can't find CampaignReport.TableID")
+		return errors.New("can't find CampaignReport.DatasetID")
 	}
 	if cfg.CampaignReport.TableID == "" {
 		return errors.New("can't find CampaignReport.TableID")
@@ -74,6 +74,11 @@ type CallReport struct {
 	TableID   string `yaml:"table_id"`
 }
 
+type OfflineMessageReport struct {
+	DatasetID string `yaml:"dataset_id"`
+	TableID   string `yaml:"table_id"`
+}
+
 type CampaignReport struct {
 	DatasetID string `yaml:"dataset_id"`
 	TableID   string `yaml:"table_id"`
@@ -90,16 +95,19 @@ type TG struct {
 	Chat      int64  `yaml:"chat" env:"TG_CHAT"`
 }
 
-func NewCliConfig(filePath string) (*CliConfig, error) {
+func NewCliConfig(filePath string, useEnv bool) (*CliConfig, error) {
 	cfg := &CliConfig{}
-	err := cleanenv.ReadConfig(filePath, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("config error: %w", err)
-	}
 
-	err = cleanenv.ReadEnv(cfg)
-	if err != nil {
-		return nil, err
+	if useEnv {
+		err := cleanenv.ReadEnv(cfg)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err := cleanenv.ReadConfig(filePath, cfg)
+		if err != nil {
+			return nil, fmt.Errorf("config error: %w", err)
+		}
 	}
 
 	return cfg, nil
@@ -109,6 +117,7 @@ type ServerConfig struct {
 	TG      `yaml:"tg"`
 	GRPC    `yaml:"grpc"`
 	Comagic `yaml:"comagic"`
+	KeysDir string `yaml:"keys_dir" env:"KEYS_DIR"`
 }
 
 type GRPC struct {
@@ -116,49 +125,61 @@ type GRPC struct {
 	Port int    `yaml:"port" env:"GRPC_PORT"`
 }
 
-func NewServerConfig(filePath string) (*ServerConfig, error) {
+func NewServerConfig(filePath string, useEnv bool) (*ServerConfig, error) {
 	cfg := &ServerConfig{}
-	err := cleanenv.ReadEnv(cfg)
-	if err != nil {
-		return nil, fmt.Errorf("config error: %w", err)
-	}
 
-	err = cleanenv.ReadEnv(cfg)
-	if err != nil {
-		return nil, err
+	if useEnv {
+		err := cleanenv.ReadEnv(cfg)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err := cleanenv.ReadConfig(filePath, cfg)
+		if err != nil {
+			return nil, fmt.Errorf("config error: %w", err)
+		}
 	}
 
 	return cfg, nil
 }
 
 type ScheduleConfig struct {
-	Time               `yaml:"time"`
-	TG                 `yaml:"tg"`
-	Comagic            `yaml:"comagic"`
-	CallReport         `yaml:"call_report"`
-	CampaignReport     `yaml:"campaign_report"`
-	CampaignConditions `yaml:"campaign_conditions"`
-	BQ                 `yaml:"bq"`
-	CS                 `yaml:"cloud_storage"`
+	Time                 `yaml:"time"`
+	TG                   `yaml:"tg"`
+	Comagic              `yaml:"comagic"`
+	CallReport           `yaml:"call_report"`
+	OfflineMessageReport `yaml:"offline_message_report"`
+	CampaignReport       `yaml:"campaign_report"`
+	CampaignConditions   `yaml:"campaign_conditions"`
+	BQ                   `yaml:"bq"`
+	CS                   `yaml:"cloud_storage"`
 }
 
 type Time struct {
-	Calls string `yaml:"calls" `
+	All string `yaml:"all" `
 }
 
-func NewScheduleConfig(filePath string) (*ScheduleConfig, error) {
+func NewScheduleConfig(filePath string, useEnv bool) (*ScheduleConfig, error) {
 	cfg := &ScheduleConfig{}
-	err := cleanenv.ReadConfig(filePath, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("config error: %w", err)
+
+	if useEnv {
+		err := cleanenv.ReadEnv(cfg)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err := cleanenv.ReadConfig(filePath, cfg)
+		if err != nil {
+			return nil, fmt.Errorf("config error: %w", err)
+		}
 	}
 
 	return cfg, nil
 }
 
 func (cfg ScheduleConfig) Check() error {
-	if cfg.Time.Calls == "" {
-		return errors.New("can't find Time.Calls")
+	if cfg.Time.All == "" {
+		return errors.New("can't find Time.All")
 	}
 	if cfg.Comagic.Version == "" {
 		return errors.New("can't find Comagic.Version")

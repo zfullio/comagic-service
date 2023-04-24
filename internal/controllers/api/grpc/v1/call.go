@@ -13,11 +13,28 @@ import (
 	"context"
 	"fmt"
 	"google.golang.org/api/option"
-	"google.golang.org/genproto/googleapis/type/date"
-	"time"
 )
 
 func (s Server) PushCallsToBQ(ctx context.Context, req *pb.PushCallsToBQRequest) (*pb.PushCallsToBQResponse, error) {
+	s.logger.Info().Msg("PushCallsToBQ")
+
+	bqServiceKey := s.cfg.KeysDir + "/" + req.BqConfig.ServiceKey
+	csServiceKey := s.cfg.KeysDir + "/" + req.CsConfig.ServiceKey
+
+	dateFrom, err := pbDateNormalize(req.DateFrom)
+	if err != nil {
+		return &pb.PushCallsToBQResponse{
+			IsOK: false,
+		}, fmt.Errorf("wrong value in field 'dateFrom' : %s", err)
+	}
+
+	dateTill, err := pbDateNormalize(req.DateTill)
+	if err != nil {
+		return &pb.PushCallsToBQResponse{
+			IsOK: false,
+		}, fmt.Errorf("wrong value in field 'dateTill' : %s", err)
+	}
+
 	fields := []string{"id", "start_time", "finish_time", "finish_reason", "direction", "cpn_region_id",
 		"cpn_region_name", "scenario_operations", "scenario_id", "scenario_name", "source", "is_lost",
 		"communication_number", "communication_page_url", "contact_phone_number", "communication_id", "communication_type",
@@ -37,29 +54,27 @@ func (s Server) PushCallsToBQ(ctx context.Context, req *pb.PushCallsToBQRequest)
 		"eq_utm_term", "eq_utm_content", "eq_utm_campaign", "eq_utm_referrer", "eq_utm_expid",
 	}
 	clComagic := comagic.NewClient(comagic.DataAPI, s.cfg.Version, req.ComagicToken)
-	cmCallRepo := cmRepo.NewCallRepository(*clComagic)
+	cmCallRepo := cmRepo.NewCallRepository(*clComagic, s.logger)
 
-	bqClient, err := bigquery.NewClient(context.Background(), req.BqConfig.ProjectID, option.WithCredentialsFile(req.BqConfig.ServiceKey))
+	bqClient, err := bigquery.NewClient(context.Background(), req.BqConfig.ProjectID, option.WithCredentialsFile(bqServiceKey))
 	if err != nil {
 		return &pb.PushCallsToBQResponse{
 			IsOK: false,
 		}, fmt.Errorf("ошибка формирования клиента Big Query: %s", err)
 	}
-	bqCallRepo := cmBQ.NewCallRepository(*bqClient, req.BqConfig.DatasetID, req.BqConfig.TableID)
+	bqCallRepo := cmBQ.NewCallRepository(*bqClient, req.BqConfig.DatasetID, req.BqConfig.TableID, s.logger)
 
-	csClient, err := storage.NewClient(ctx, option.WithCredentialsFile(req.CsConfig.ServiceKey))
+	csClient, err := storage.NewClient(ctx, option.WithCredentialsFile(csServiceKey))
 	if err != nil {
 		return &pb.PushCallsToBQResponse{
 			IsOK: false,
 		}, fmt.Errorf("ошибка формирования клиента Cloud Storage: %s", err)
 	}
-	csCallRepo := cmCS.NewCallRepository(*csClient, req.CsConfig.BucketName)
+	csCallRepo := cmCS.NewCallRepository(*csClient, req.CsConfig.BucketName, s.logger)
 
 	srv := service.NewCallService(cmCallRepo, bqCallRepo, csCallRepo, s.logger)
 	cmPolicy := policy.NewCallPolicy(*srv)
 
-	dateFrom := pbDateNormalise(req.DateFrom)
-	dateTill := pbDateNormalise(req.DateTill)
 	err = cmPolicy.PushCallsToBQ(dateFrom, dateTill, fields, req.CsConfig.BucketName)
 	if err != nil {
 		return &pb.PushCallsToBQResponse{
@@ -70,8 +85,4 @@ func (s Server) PushCallsToBQ(ctx context.Context, req *pb.PushCallsToBQRequest)
 	return &pb.PushCallsToBQResponse{
 		IsOK: true,
 	}, nil
-}
-
-func pbDateNormalise(date *date.Date) time.Time {
-	return time.Date(int(date.Year), time.Month(date.Month), int(date.Day), 0, 0, 0, 0, time.UTC)
 }

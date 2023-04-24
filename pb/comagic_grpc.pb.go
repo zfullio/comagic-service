@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ComagicServiceClient interface {
 	PushCallsToBQ(ctx context.Context, in *PushCallsToBQRequest, opts ...grpc.CallOption) (*PushCallsToBQResponse, error)
+	PushOfflineMessagesToBQ(ctx context.Context, in *PushOfflineMessagesToBQRequest, opts ...grpc.CallOption) (*PushOfflineMessagesToBQResponse, error)
 	GetCampaigns(ctx context.Context, in *GetCampaignsRequest, opts ...grpc.CallOption) (*GetCampaignsResponse, error)
 	GetCampaignsConditions(ctx context.Context, in *GetCampaignsConditionsRequest, opts ...grpc.CallOption) (*GetCampaignsConditionsResponse, error)
 }
@@ -38,6 +39,15 @@ func NewComagicServiceClient(cc grpc.ClientConnInterface) ComagicServiceClient {
 func (c *comagicServiceClient) PushCallsToBQ(ctx context.Context, in *PushCallsToBQRequest, opts ...grpc.CallOption) (*PushCallsToBQResponse, error) {
 	out := new(PushCallsToBQResponse)
 	err := c.cc.Invoke(ctx, "/ComagicService/PushCallsToBQ", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *comagicServiceClient) PushOfflineMessagesToBQ(ctx context.Context, in *PushOfflineMessagesToBQRequest, opts ...grpc.CallOption) (*PushOfflineMessagesToBQResponse, error) {
+	out := new(PushOfflineMessagesToBQResponse)
+	err := c.cc.Invoke(ctx, "/ComagicService/PushOfflineMessagesToBQ", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -67,6 +77,7 @@ func (c *comagicServiceClient) GetCampaignsConditions(ctx context.Context, in *G
 // for forward compatibility
 type ComagicServiceServer interface {
 	PushCallsToBQ(context.Context, *PushCallsToBQRequest) (*PushCallsToBQResponse, error)
+	PushOfflineMessagesToBQ(context.Context, *PushOfflineMessagesToBQRequest) (*PushOfflineMessagesToBQResponse, error)
 	GetCampaigns(context.Context, *GetCampaignsRequest) (*GetCampaignsResponse, error)
 	GetCampaignsConditions(context.Context, *GetCampaignsConditionsRequest) (*GetCampaignsConditionsResponse, error)
 	mustEmbedUnimplementedComagicServiceServer()
@@ -78,6 +89,9 @@ type UnimplementedComagicServiceServer struct {
 
 func (UnimplementedComagicServiceServer) PushCallsToBQ(context.Context, *PushCallsToBQRequest) (*PushCallsToBQResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PushCallsToBQ not implemented")
+}
+func (UnimplementedComagicServiceServer) PushOfflineMessagesToBQ(context.Context, *PushOfflineMessagesToBQRequest) (*PushOfflineMessagesToBQResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PushOfflineMessagesToBQ not implemented")
 }
 func (UnimplementedComagicServiceServer) GetCampaigns(context.Context, *GetCampaignsRequest) (*GetCampaignsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCampaigns not implemented")
@@ -112,6 +126,24 @@ func _ComagicService_PushCallsToBQ_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ComagicServiceServer).PushCallsToBQ(ctx, req.(*PushCallsToBQRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ComagicService_PushOfflineMessagesToBQ_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PushOfflineMessagesToBQRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ComagicServiceServer).PushOfflineMessagesToBQ(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ComagicService/PushOfflineMessagesToBQ",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ComagicServiceServer).PushOfflineMessagesToBQ(ctx, req.(*PushOfflineMessagesToBQRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -162,6 +194,10 @@ var ComagicService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PushCallsToBQ",
 			Handler:    _ComagicService_PushCallsToBQ_Handler,
+		},
+		{
+			MethodName: "PushOfflineMessagesToBQ",
+			Handler:    _ComagicService_PushOfflineMessagesToBQ_Handler,
 		},
 		{
 			MethodName: "GetCampaigns",

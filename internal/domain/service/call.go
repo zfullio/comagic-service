@@ -5,10 +5,7 @@ import (
 	"Comagic/pkg/csv"
 	"context"
 	"fmt"
-	"github.com/dnlo/struct2csv"
 	"github.com/rs/zerolog"
-	"log"
-	"os"
 	"strings"
 	"time"
 )
@@ -20,6 +17,7 @@ type CallRepositoryTracking interface {
 type CallRepositoryBQ interface {
 	SendFromCS(ctx context.Context, bucket string, object string) (err error)
 	DeleteByDateColumn(ctx context.Context, dateColumn string, dateStart time.Time, dateFinish time.Time) (err error)
+	CreateTable(ctx context.Context) (err error)
 }
 
 type CallRepositoryCS interface {
@@ -35,6 +33,7 @@ type CallService struct {
 
 func NewCallService(tracking CallRepositoryTracking, bq CallRepositoryBQ, cs CallRepositoryCS, logger *zerolog.Logger) *CallService {
 	serviceLogger := logger.With().Str("service", "call").Logger()
+
 	return &CallService{
 		tracking: tracking,
 		bq:       bq,
@@ -44,63 +43,52 @@ func NewCallService(tracking CallRepositoryTracking, bq CallRepositoryBQ, cs Cal
 }
 
 func (s CallService) GetByDate(dateFrom time.Time, dateTill time.Time, fields []string) (calls []entity.Call, err error) {
-	s.logger.Info().Msg("GetByDate")
+	s.logger.Trace().Msg("GetByDate")
 	calls, err = s.tracking.GetByDate(dateFrom, dateTill, fields)
 	if err != nil {
-		return calls, fmt.Errorf("ошибка получения получения звонков: %w", err)
+		return calls, err
 	}
+
 	return calls, err
 }
 
 func (s CallService) SendAll(ctx context.Context, dateFrom time.Time, dateTill time.Time, bucketName string, calls []entity.Call) (err error) {
-	s.logger.Info().Msg("SendAll")
+	s.logger.Trace().Msg("SendAll")
+
 	dataForSend := make([]entity.CallCSV, 0, len(calls))
 	for _, call := range calls {
 		item := NewCallCSV(call)
 		dataForSend = append(dataForSend, *item)
 	}
-	filename := csv.GenerateFilename("comagic_calls")
-	err = csv.GenerateFile(dataForSend, filename)
+
+	filename, err := csv.GenerateFile(dataForSend, "comagic_calls")
 	if err != nil {
 		return fmt.Errorf("ошибка генерации csv файла: %w", err)
 	}
+
 	err = s.cs.SendFile(ctx, filename)
 	if err != nil {
 		return fmt.Errorf("ошибка заливки на storage: %w", err)
 	}
-	fmt.Printf("Удаление за %s -- %s", dateFrom, dateTill)
+
+	err = s.bq.CreateTable(ctx)
+	if err != nil {
+		return fmt.Errorf("ошибка создания bq таблицы: %w", err)
+	}
+
+	s.logger.Info().Msgf("Удаление за %s -- %s", dateFrom.Format(time.DateOnly), dateTill.Format(time.DateOnly))
+
 	err = s.bq.DeleteByDateColumn(ctx, "date", dateFrom, dateTill)
 	if err != nil {
 		return fmt.Errorf("ошибка удаления из bq: %w", err)
 	}
+
 	err = s.bq.SendFromCS(ctx, bucketName, filename)
 	if err != nil {
 		return fmt.Errorf("ошибка добавления в bq из storage: %w", err)
 	}
 
-	return err
-}
-
-func (s CallService) GenerateFile(calls []entity.CallCSV, name string) (err error) {
-	s.logger.Info().Msg("GenerateFile")
-	csvFile, err := os.Create(name)
-	if err != nil {
-		log.Fatalf("failed creating file: %s", err)
-	}
-	defer csvFile.Close()
-
-	enc := struct2csv.New()
-	_, err = enc.Marshal(calls)
-	if err != nil {
-		return err
-	}
-	w := struct2csv.NewWriter(csvFile)
-	w.SetComma('|')
-	err = w.WriteStructs(calls)
-	if err != nil {
-		return err
-	}
-	return err
+	return nil
 }
 
 func NewCallCSV(call entity.Call) *entity.CallCSV {
@@ -193,18 +181,22 @@ func NewCallCSV(call entity.Call) *entity.CallCSV {
 }
 
 func (s CallService) PushCallsToBQ(dateFrom time.Time, dateTill time.Time, fields []string, bucketName string) (err error) {
-	s.logger.Info().Msg("PushCallsToBQ")
+	s.logger.Trace().Msg("PushCallsToBQ")
+
 	calls, err := s.GetByDate(dateFrom, dateTill, fields)
 	if err != nil {
-		return fmt.Errorf("ошибка получения звонков: %w", err)
+		return err
 	}
+
 	if len(calls) == 0 {
 		return fmt.Errorf("звонки | пустой список значений")
 	}
+
 	ctx := context.Background()
 	err = s.SendAll(ctx, dateFrom, dateTill, bucketName, calls)
 	if err != nil {
 		return fmt.Errorf("ошибка отправки звонков: %w", err)
 	}
+
 	return err
 }
