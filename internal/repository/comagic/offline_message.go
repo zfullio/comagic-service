@@ -10,11 +10,11 @@ import (
 )
 
 type offlineMessageRepository struct {
-	client cm.Client
+	client *cm.Client
 	logger *zerolog.Logger
 }
 
-func NewOfflineMessageRepository(tracking cm.Client, logger *zerolog.Logger) *offlineMessageRepository {
+func NewOfflineMessageRepository(tracking *cm.Client, logger *zerolog.Logger) *offlineMessageRepository {
 	cmLogger := logger.With().Str("repo", "offline-message").Str("type", "comagic").Logger()
 
 	return &offlineMessageRepository{
@@ -45,6 +45,7 @@ func newOfflineMessage(message cm.OfflineMessageInfo, dateUpdate time.Time) *ent
 	for _, tag := range message.Tags {
 		tagNames = append(tagNames, tag.TagName)
 	}
+
 	return &entity.OfflineMessage{
 		Id:                       message.Id,
 		DateTime:                 message.DateTime,

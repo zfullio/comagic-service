@@ -10,11 +10,11 @@ import (
 )
 
 type callRepository struct {
-	client cm.Client
+	client *cm.Client
 	logger *zerolog.Logger
 }
 
-func NewCallRepository(tracking cm.Client, logger *zerolog.Logger) *callRepository {
+func NewCallRepository(tracking *cm.Client, logger *zerolog.Logger) *callRepository {
 	cmLogger := logger.With().Str("repo", "call").Str("type", "comagic").Logger()
 
 	return &callRepository{
@@ -45,6 +45,7 @@ func newCall(call cm.CallInfo, dateUpdate time.Time) *entity.Call {
 	for _, tag := range call.Tags {
 		tagNames = append(tagNames, tag.TagName)
 	}
+
 	return &entity.Call{
 		Id:                            call.Id,
 		StartTime:                     call.StartTime,

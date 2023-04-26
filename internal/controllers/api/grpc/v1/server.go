@@ -14,6 +14,7 @@ type Server struct {
 
 func NewServer(cfg config.ServerConfig, logger *zerolog.Logger, srv pb.UnimplementedComagicServiceServer) *Server {
 	apiLogger := logger.With().Str("api", "grpc").Logger()
+
 	return &Server{
 		cfg:                               cfg,
 		logger:                            &apiLogger,

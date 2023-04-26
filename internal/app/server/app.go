@@ -1,4 +1,4 @@
-package app_server
+package server
 
 import (
 	"Comagic/internal/config"

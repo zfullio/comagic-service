@@ -17,26 +17,32 @@ func (c *Client) GetAccount() (data RespGetAccount, err error) {
 	if err != nil {
 		return data, fmt.Errorf("ошибка формирования запроса: %w", err)
 	}
+
 	req, err := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
 	if err != nil {
 		return data, err
 	}
+
 	req.Header.Add("Content-Type", "application/json")
 	resp, err := c.tr.Do(req)
 	if err != nil {
 		return data, err
 	}
+
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return data, err
 	}
+
 	err = json.Unmarshal(responseBody, &data)
 	if err != nil {
 		return data, err
 	}
+
 	if data.Error.Code != 0 {
 		return data, &data.Error
 	}
+
 	return data, err
 
 }
@@ -69,26 +75,32 @@ func (c *Client) GetCampaigns(fields []string, filter Filter) (data RespCampaign
 	if err != nil {
 		return data, fmt.Errorf("ошибка формирования запроса: %w", err)
 	}
+
 	req, err := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
 	if err != nil {
 		return data, err
 	}
+
 	req.Header.Add("Content-Type", "application/json")
 	resp, err := c.tr.Do(req)
 	if err != nil {
 		return data, err
 	}
+
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return data, err
 	}
+
 	err = json.Unmarshal(responseBody, &data)
 	if err != nil {
 		return data, err
 	}
+
 	if data.Error.Code != 0 {
 		return data, &data.Error
 	}
+
 	return data, err
 
 }
@@ -188,10 +200,12 @@ func (c *Client) GetVirtualNumbers() (data RespVirtualNumbersInfo, err error) {
 	if err != nil {
 		return data, fmt.Errorf("ошибка формирования запроса: %w", err)
 	}
+
 	req, err := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
 	if err != nil {
 		return data, err
 	}
+
 	req.Header.Add("Content-Type", "application/json; charset=UTF-8")
 	resp, err := c.tr.Do(req)
 	if err != nil {
@@ -207,9 +221,11 @@ func (c *Client) GetVirtualNumbers() (data RespVirtualNumbersInfo, err error) {
 	if err != nil {
 		return data, err
 	}
+
 	if data.Error.Code != 0 {
 		return data, &data.Error
 	}
+
 	return data, err
 
 }
@@ -374,21 +390,28 @@ func (c *Client) GetCallsReport(dateFrom time.Time, dateTill time.Time, fields [
 		if err != nil {
 			return calls, err
 		}
+
 		if data.Error.Code != 0 {
 			return calls, &data.Error
 		}
 
-		log.Printf("Лимиты: %+v", data.Result.Metadata.Limits)
 		calls = append(calls, data.Result.Data...)
 		receivedPositions = len(calls)
-		log.Printf("Получено %v позиций из %v", receivedPositions, data.Result.Metadata.TotalItems)
 		if receivedPositions < data.Result.Metadata.TotalItems {
+			ControlLimits(data.Result.Metadata.Limits)
 			offset += limit
 		} else {
 			break
 		}
 	}
 	return calls, err
+}
+
+func ControlLimits(l Limits) {
+	if l.MinuteLimit <= 5 {
+		log.Printf("Упреждение в минутный лимит. Пауза %v секунд\n", l.MinuteReset)
+		time.Sleep(time.Duration(l.MinuteReset) * time.Second)
+	}
 }
 
 func (c *Client) GetOfflineMessagesReport(dateFrom time.Time, dateTill time.Time, fields []string) (messages []OfflineMessageInfo, err error) {
@@ -442,14 +465,15 @@ func (c *Client) GetOfflineMessagesReport(dateFrom time.Time, dateTill time.Time
 		if err != nil {
 			return messages, err
 		}
+
 		if data.Error.Code != 0 {
 			return messages, &data.Error
 		}
-		//log.Printf("Лимиты: %+v", data.Result.Metadata.Limits)
+
 		messages = append(messages, data.Result.Data...)
 		receivedPositions = len(messages)
-		log.Printf("Получено %v позиций из %v", receivedPositions, data.Result.Metadata.TotalItems)
 		if receivedPositions < data.Result.Metadata.TotalItems {
+			ControlLimits(data.Result.Metadata.Limits)
 			offset += limit
 		} else {
 			break

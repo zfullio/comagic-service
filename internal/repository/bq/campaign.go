@@ -9,20 +9,21 @@ import (
 )
 
 type campaignRepository struct {
-	db        bigquery.Client
-	datasetID string
-	tableID   string
-	logger    *zerolog.Logger
+	db     *bigquery.Client
+	table  *bigquery.Table
+	logger *zerolog.Logger
 }
 
-func NewCampaignRepository(client bigquery.Client, datasetID string, tableID string, logger *zerolog.Logger) *campaignRepository {
+func NewCampaignRepository(client *bigquery.Client, datasetID string, tableID string, logger *zerolog.Logger) *campaignRepository {
 	repoLogger := logger.With().Str("repo", "campaign").Str("type", "bigquery").Logger()
 
+	dataset := client.Dataset(datasetID)
+	table := dataset.Table(tableID)
+
 	return &campaignRepository{
-		db:        client,
-		datasetID: datasetID,
-		tableID:   tableID,
-		logger:    &repoLogger,
+		db:     client,
+		table:  table,
+		logger: &repoLogger,
 	}
 }
 

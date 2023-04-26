@@ -1,11 +1,11 @@
 package v1
 
 import (
-	cmBQ "Comagic/internal/adapters/repository/bq"
-	cmRepo "Comagic/internal/adapters/repository/comagic"
-	cmCS "Comagic/internal/adapters/repository/cs"
 	"Comagic/internal/domain/policy"
 	"Comagic/internal/domain/service"
+	cmBQ "Comagic/internal/repository/bq"
+	cmRepo "Comagic/internal/repository/comagic"
+	cmCS "Comagic/internal/repository/cs"
 	"Comagic/pb"
 	"Comagic/pkg/comagic"
 	"cloud.google.com/go/bigquery"
@@ -16,7 +16,7 @@ import (
 )
 
 func (s Server) PushCallsToBQ(ctx context.Context, req *pb.PushCallsToBQRequest) (*pb.PushCallsToBQResponse, error) {
-	s.logger.Info().Msg("PushCallsToBQ")
+	s.logger.Info().Str("client", req.BqConfig.ProjectID).Msg("PushCallsToBQ prepare")
 
 	bqServiceKey := s.cfg.KeysDir + "/" + req.BqConfig.ServiceKey
 	csServiceKey := s.cfg.KeysDir + "/" + req.CsConfig.ServiceKey
@@ -54,34 +54,55 @@ func (s Server) PushCallsToBQ(ctx context.Context, req *pb.PushCallsToBQRequest)
 		"eq_utm_term", "eq_utm_content", "eq_utm_campaign", "eq_utm_referrer", "eq_utm_expid",
 	}
 	clComagic := comagic.NewClient(comagic.DataAPI, s.cfg.Version, req.ComagicToken)
-	cmCallRepo := cmRepo.NewCallRepository(*clComagic, s.logger)
+	cmCallRepo := cmRepo.NewCallRepository(clComagic, s.logger)
 
 	bqClient, err := bigquery.NewClient(context.Background(), req.BqConfig.ProjectID, option.WithCredentialsFile(bqServiceKey))
 	if err != nil {
+		s.logger.Err(err).Msg("ошибка формирования клиента Big Query")
 		return &pb.PushCallsToBQResponse{
 			IsOK: false,
 		}, fmt.Errorf("ошибка формирования клиента Big Query: %s", err)
 	}
-	bqCallRepo := cmBQ.NewCallRepository(*bqClient, req.BqConfig.DatasetID, req.BqConfig.TableID, s.logger)
+
+	defer func(bqClient *bigquery.Client) {
+		err := bqClient.Close()
+		if err != nil {
+			s.logger.Err(err).Msg("ошибка закрытия клиента Big Query")
+		}
+	}(bqClient)
+
+	bqCallRepo := cmBQ.NewCallRepository(bqClient, req.BqConfig.DatasetID, req.BqConfig.TableID, s.logger)
 
 	csClient, err := storage.NewClient(ctx, option.WithCredentialsFile(csServiceKey))
 	if err != nil {
+		s.logger.Err(err).Msg("ошибка формирования клиента Cloud Storage")
 		return &pb.PushCallsToBQResponse{
 			IsOK: false,
 		}, fmt.Errorf("ошибка формирования клиента Cloud Storage: %s", err)
 	}
-	csCallRepo := cmCS.NewCallRepository(*csClient, req.CsConfig.BucketName, s.logger)
+
+	defer func(csClient *storage.Client) {
+		err := csClient.Close()
+		if err != nil {
+			s.logger.Err(err).Msg("ошибка закрытия клиента Cloud Storage")
+		}
+	}(csClient)
+
+	csCallRepo := cmCS.NewCallRepository(csClient, req.CsConfig.BucketName, s.logger)
 
 	srv := service.NewCallService(cmCallRepo, bqCallRepo, csCallRepo, s.logger)
 	cmPolicy := policy.NewCallPolicy(*srv)
 
-	err = cmPolicy.PushCallsToBQ(dateFrom, dateTill, fields, req.CsConfig.BucketName)
+	s.logger.Info().Str("client", req.BqConfig.ProjectID).Msg("PushCallsToBQ started")
+	err = cmPolicy.PushCallsToBQ(dateFrom, dateTill.AddDate(0, 0, 1), fields, req.CsConfig.BucketName)
 	if err != nil {
+		s.logger.Err(err).Msg("ошибка выполнения")
 		return &pb.PushCallsToBQResponse{
 			IsOK: false,
 		}, fmt.Errorf("ошибка выполнения: %s", err)
 	}
 
+	s.logger.Info().Str("client", req.BqConfig.ProjectID).Msg("PushCallsToBQ done")
 	return &pb.PushCallsToBQResponse{
 		IsOK: true,
 	}, nil

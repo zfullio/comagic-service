@@ -1,110 +1,116 @@
 package main
 
 import (
-	"Comagic/internal/app_schedule"
 	"Comagic/internal/config"
+	"Comagic/pb"
 	"context"
 	"flag"
 	"fmt"
 	"github.com/go-co-op/gocron"
-	"github.com/nikoksr/notify"
-	"github.com/nikoksr/notify/service/telegram"
-	"github.com/rs/zerolog"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"os"
-	"runtime/debug"
 	"time"
 )
 
-const appName = "Comagic (schedule)"
-
 func main() {
-	var fileConfig = flag.String("f", "config.yml", "configuration file")
-	var useEnv = flag.Bool("env", false, "use environment variables")
-	var trace = flag.Bool("trace", false, "switch trace logging")
+	var fileConfig = flag.String("f", "schedule_config.yml", "configuration file")
 	flag.Parse()
 
-	buildInfo, _ := debug.ReadBuildInfo()
-	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}).
-		With().
-		Timestamp().
-		Caller().
-		Int("pid", os.Getpid()).
-		Str("go_version", buildInfo.GoVersion).
-		Logger()
-
-	if !*useEnv {
-		logger.Info().Msgf("configuration file: %s", *fileConfig)
-	} else {
-		logger.Info().Msg("configuration from ENV")
-	}
-
-	if *trace {
-		logger.Level(zerolog.TraceLevel)
-	} else {
-		logger.Level(zerolog.InfoLevel)
-	}
-
-	cfg, err := config.NewScheduleConfig(*fileConfig, *useEnv)
+	cfg, err := config.NewScheduleConfig(*fileConfig)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Ошибка в файле настроек")
-	}
-	err = cfg.Check()
-	if err != nil {
-		log.Fatalf("eror in config: %s", err)
-	}
-	telegramService, err := telegram.New(cfg.TG.Token)
-	if err != nil {
-		logger.Fatal().Err(err).Msg("Ошибка в сервисе: Telegram")
-	}
-	telegramService.AddReceivers(cfg.Chat)
-
-	appNotify := notify.New()
-	appNotify.UseServices(telegramService)
-
-	if !cfg.IsEnabled {
-		notify.Disable(appNotify)
+		log.Fatalf("could not read config: %v", err)
 	}
 
-	ctx := context.Background()
-	a := app_schedule.NewApp(ctx, cfg, cfg.Comagic.Token, &logger, appNotify)
+	fmt.Printf("Количество отчетов: %d\n", len(cfg.Reports))
+	fmt.Printf("Запуск ежедневно в: %s\n", cfg.Time)
 
-	// Планировщик
 	s := gocron.NewScheduler(time.UTC)
 	s.WaitForScheduleAll()
 	location, err := time.LoadLocation("Local")
 	s.ChangeLocation(location)
 
-	_, err = s.Every(1).Day().At(cfg.Time.All).Do(scheduleRun, a)
+	_, err = s.Every(1).Day().At(cfg.Time).Do(scheduleRun, *cfg)
 	if err != nil {
 		log.Fatalf("Ошибка планировщика %v", err)
 	}
-	s.StartAsync()
-	_, t := s.NextRun()
-	_ = appNotify.Send(ctx, appName, fmt.Sprintf("Next run: %s", t.Format(time.DateTime)))
+
 	s.StartBlocking()
+
+	recover()
 }
 
-func scheduleRun(a *app_schedule.App) {
+func scheduleRun(cfg config.ScheduleConfig) {
+	defer GracefulShutdown()
+
+	conn, err := grpc.Dial(fmt.Sprintf("%s:%v", cfg.GRPC.IP, cfg.GRPC.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
+
+	defer func(conn *grpc.ClientConn) {
+		err := conn.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}(conn)
+
+	c := pb.NewComagicServiceClient(conn)
+
 	ctx := context.Background()
 	now := time.Now()
-	dateTill := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-	dateFrom := dateTill.AddDate(0, -3, 0)
+	dateFrom := now.AddDate(0, 0, -89).Format("2006-01-02")
+	dateTill := now.Format("2006-01-02")
 
-	err := a.PushCallsToBQ(dateFrom, dateTill)
-	if err != nil {
-		log.Printf("возникла ошибка во время PushCallsToBQ: %s", err)
-		_ = a.Notify.Send(ctx, appName, fmt.Sprintf("возникла ошибка во время PushCallsToBQ: %s", err))
+	for _, report := range cfg.Reports {
+		log.Printf("Сбор отчета для: %s\n", report.ObjectName)
+		callsReq, err := c.PushCallsToBQ(ctx, &pb.PushCallsToBQRequest{
+			ComagicToken: report.ComagicToken,
+			BqConfig: &pb.BqConfig{
+				ProjectID:  report.ProjectId,
+				DatasetID:  report.DatasetId,
+				TableID:    report.CallsTable,
+				ServiceKey: report.GoogleServiceKey,
+			},
+			CsConfig: &pb.CsConfig{
+				ServiceKey: report.GoogleServiceKey,
+				BucketName: report.BucketName,
+			},
+			DateFrom: dateFrom,
+			DateTill: dateTill,
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		log.Printf("Статус отчета по звонкам: %v ", callsReq.IsOK)
+
+		messagesReq, err := c.PushOfflineMessagesToBQ(ctx, &pb.PushOfflineMessagesToBQRequest{
+			ComagicToken: report.ComagicToken,
+			BqConfig: &pb.BqConfig{
+				ProjectID:  report.ProjectId,
+				DatasetID:  report.DatasetId,
+				TableID:    report.OfflineMessageTable,
+				ServiceKey: report.GoogleServiceKey,
+			},
+			CsConfig: &pb.CsConfig{
+				ServiceKey: report.GoogleServiceKey,
+				BucketName: report.BucketName,
+			},
+			DateFrom: dateFrom,
+			DateTill: dateTill,
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		log.Printf("Статус отчета по заявкам: %v ", messagesReq.IsOK)
+
 	}
+}
 
-	_ = a.Notify.Send(ctx, appName, fmt.Sprint("PushCallsToBQ: Успешно", err))
-
-	err = a.PushOfflineMessagesToBQ(dateFrom, dateTill)
-	if err != nil {
-		log.Printf("возникла ошибка во время PushOfflineMessagesToBQ: %s", err)
-		_ = a.Notify.Send(ctx, appName, fmt.Sprintf("возникла ошибка во время PushOfflineMessagesToBQ: %s", err))
+func GracefulShutdown() {
+	if err := recover(); err != nil {
+		fmt.Println("Критическая ошибка:", err)
 	}
-
-	_ = a.Notify.Send(ctx, appName, fmt.Sprint("PushOfflineMessagesToBQ: Успешно", err))
-
+	os.Exit(0)
 }

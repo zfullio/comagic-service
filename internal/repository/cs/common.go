@@ -15,7 +15,12 @@ func SendFile(ctx context.Context, bucket *storage.BucketHandle, filename string
 	if err != nil {
 		return fmt.Errorf("os.Open: %w", err)
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(f)
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Minute)
 	defer cancel()

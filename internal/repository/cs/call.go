@@ -8,27 +8,27 @@ import (
 )
 
 type callRepository struct {
-	db         storage.Client
-	BucketName string
-	logger     *zerolog.Logger
+	db     *storage.Client
+	Bucket *storage.BucketHandle
+	logger *zerolog.Logger
 }
 
-func NewCallRepository(client storage.Client, bucketName string, logger *zerolog.Logger) *callRepository {
+func NewCallRepository(client *storage.Client, bucketName string, logger *zerolog.Logger) *callRepository {
 	repoLogger := logger.With().Str("repo", "call").Str("type", "cloud-storage").Logger()
 
+	bucket := client.Bucket(bucketName)
+
 	return &callRepository{
-		db:         client,
-		BucketName: bucketName,
-		logger:     &repoLogger,
+		db:     client,
+		Bucket: bucket,
+		logger: &repoLogger,
 	}
 }
 
 func (cr callRepository) SendFile(ctx context.Context, filename string) (err error) {
 	cr.logger.Trace().Msgf("SendFile: %v", filename)
 
-	bucket := cr.db.Bucket(cr.BucketName)
-
-	err = SendFile(ctx, bucket, filename)
+	err = SendFile(ctx, cr.Bucket, filename)
 	if err != nil {
 		return fmt.Errorf("SendFile: %w", err)
 	}

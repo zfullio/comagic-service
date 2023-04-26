@@ -9,40 +9,41 @@ import (
 )
 
 type offlineMessageRepository struct {
-	db        bigquery.Client
-	datasetID string
-	tableID   string
-	logger    *zerolog.Logger
+	db     *bigquery.Client
+	table  *bigquery.Table
+	logger *zerolog.Logger
 }
 
-func NewOfflineMessageRepository(client bigquery.Client, datasetID string, tableID string, logger *zerolog.Logger) *offlineMessageRepository {
+func NewOfflineMessageRepository(client *bigquery.Client, datasetID string, tableID string, logger *zerolog.Logger) *offlineMessageRepository {
 	repoLogger := logger.With().Str("repo", "offline-message").Str("type", "bigquery").Logger()
 
+	dataset := client.Dataset(datasetID)
+	table := dataset.Table(tableID)
+
 	return &offlineMessageRepository{
-		db:        client,
-		datasetID: datasetID,
-		tableID:   tableID,
-		logger:    &repoLogger,
+		db:     client,
+		table:  table,
+		logger: &repoLogger,
 	}
 }
 
-func (or offlineMessageRepository) DeleteByDateColumn(ctx context.Context, dateColumn string, dateStart time.Time, dateFinish time.Time) (err error) {
-	or.logger.Trace().Msgf("deleteByDateColumn: %v.%v", or.datasetID, or.tableID)
+func (or offlineMessageRepository) TableExists(ctx context.Context) (err error) {
+	or.logger.Trace().Msg("TableExists")
 
-	err = DeleteByDateColumn(ctx, or.db, or.datasetID, or.tableID, dateColumn, dateStart, dateFinish)
+	err = TableExists(ctx, or.table)
 	if err != nil {
-		return fmt.Errorf("DeleteByDateColumn: %w", err)
+		return err
 	}
 
-	return err
+	return nil
 }
 
 func (or offlineMessageRepository) CreateTable(ctx context.Context) (err error) {
-	or.logger.Trace().Msgf("createTable: %v.%v", or.datasetID, or.tableID)
+	or.logger.Trace().Msg("createTable")
 
-	myDataset := or.db.Dataset(or.datasetID)
-
-	err = CreateTable(ctx, OfflineMessageDTO{}, myDataset, or.tableID)
+	fieldClustering := []string{"campaign_id", "utm_source", "utm_medium"}
+	fieldPartition := "date"
+	err = CreateTable(ctx, OfflineMessageDTO{}, or.table, &fieldPartition, &fieldClustering)
 	if err != nil {
 		return fmt.Errorf("createTable: %w", err)
 	}
@@ -50,13 +51,23 @@ func (or offlineMessageRepository) CreateTable(ctx context.Context) (err error) 
 	return nil
 }
 
+func (or offlineMessageRepository) DeleteByDateColumn(ctx context.Context, dateStart time.Time, dateFinish time.Time) (err error) {
+	or.logger.Trace().Msg("deleteByDateColumn")
+
+	dateColumn := "date"
+
+	err = DeleteByDateColumn(ctx, or.db, or.table, dateColumn, dateStart, dateFinish)
+	if err != nil {
+		return fmt.Errorf("DeleteByDateColumn: %w", err)
+	}
+
+	return err
+}
+
 func (or offlineMessageRepository) SendFromCS(ctx context.Context, bucket string, object string) (err error) {
-	or.logger.Trace().Msgf("sendFromCS: %v.%v", or.datasetID, or.tableID)
+	or.logger.Trace().Msg("sendFromCS")
 
-	myDataset := or.db.Dataset(or.datasetID)
-	table := myDataset.Table(or.tableID)
-
-	err = SendFromCS(ctx, OfflineMessageDTO{}, table, bucket, object)
+	err = SendFromCS(ctx, OfflineMessageDTO{}, or.table, bucket, object)
 	if err != nil {
 		return fmt.Errorf("SendFromCS: %w", err)
 	}

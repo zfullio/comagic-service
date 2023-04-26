@@ -16,8 +16,9 @@ type CallRepositoryTracking interface {
 
 type CallRepositoryBQ interface {
 	SendFromCS(ctx context.Context, bucket string, object string) (err error)
-	DeleteByDateColumn(ctx context.Context, dateColumn string, dateStart time.Time, dateFinish time.Time) (err error)
+	DeleteByDateColumn(ctx context.Context, dateStart time.Time, dateFinish time.Time) (err error)
 	CreateTable(ctx context.Context) (err error)
+	TableExists(ctx context.Context) (err error)
 }
 
 type CallRepositoryCS interface {
@@ -44,6 +45,7 @@ func NewCallService(tracking CallRepositoryTracking, bq CallRepositoryBQ, cs Cal
 
 func (s CallService) GetByDate(dateFrom time.Time, dateTill time.Time, fields []string) (calls []entity.Call, err error) {
 	s.logger.Trace().Msg("GetByDate")
+
 	calls, err = s.tracking.GetByDate(dateFrom, dateTill, fields)
 	if err != nil {
 		return calls, err
@@ -71,18 +73,14 @@ func (s CallService) SendAll(ctx context.Context, dateFrom time.Time, dateTill t
 		return fmt.Errorf("ошибка заливки на storage: %w", err)
 	}
 
-	err = s.bq.CreateTable(ctx)
-	if err != nil {
-		return fmt.Errorf("ошибка создания bq таблицы: %w", err)
-	}
-
 	s.logger.Info().Msgf("Удаление за %s -- %s", dateFrom.Format(time.DateOnly), dateTill.Format(time.DateOnly))
 
-	err = s.bq.DeleteByDateColumn(ctx, "date", dateFrom, dateTill)
+	err = s.bq.DeleteByDateColumn(ctx, dateFrom, dateTill)
 	if err != nil {
 		return fmt.Errorf("ошибка удаления из bq: %w", err)
 	}
 
+	s.logger.Info().Msgf("Отправка файла в Cloud Storage: %s", filename)
 	err = s.bq.SendFromCS(ctx, bucketName, filename)
 	if err != nil {
 		return fmt.Errorf("ошибка добавления в bq из storage: %w", err)
@@ -193,6 +191,15 @@ func (s CallService) PushCallsToBQ(dateFrom time.Time, dateTill time.Time, field
 	}
 
 	ctx := context.Background()
+
+	err = s.bq.TableExists(ctx)
+	if err != nil {
+		err = s.bq.CreateTable(ctx)
+		if err != nil {
+			return fmt.Errorf("ошибка создания bq таблицы: %w", err)
+		}
+	}
+
 	err = s.SendAll(ctx, dateFrom, dateTill, bucketName, calls)
 	if err != nil {
 		return fmt.Errorf("ошибка отправки звонков: %w", err)

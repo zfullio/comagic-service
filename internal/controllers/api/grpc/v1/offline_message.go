@@ -1,11 +1,11 @@
 package v1
 
 import (
-	cmBQ "Comagic/internal/adapters/repository/bq"
-	cmRepo "Comagic/internal/adapters/repository/comagic"
-	cmCS "Comagic/internal/adapters/repository/cs"
 	"Comagic/internal/domain/policy"
 	"Comagic/internal/domain/service"
+	cmBQ "Comagic/internal/repository/bq"
+	cmRepo "Comagic/internal/repository/comagic"
+	cmCS "Comagic/internal/repository/cs"
 	"Comagic/pb"
 	"Comagic/pkg/comagic"
 	"cloud.google.com/go/bigquery"
@@ -16,7 +16,7 @@ import (
 )
 
 func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOfflineMessagesToBQRequest) (*pb.PushOfflineMessagesToBQResponse, error) {
-	s.logger.Info().Msg("PushOfflineMessagesToBQ")
+	s.logger.Info().Str("client", req.BqConfig.ProjectID).Msg("PushOfflineMessagesToBQ prepare")
 
 	bqServiceKey := s.cfg.KeysDir + "/" + req.BqConfig.ServiceKey
 	csServiceKey := s.cfg.KeysDir + "/" + req.CsConfig.ServiceKey
@@ -113,34 +113,55 @@ func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOffline
 	}
 
 	clComagic := comagic.NewClient(comagic.DataAPI, s.cfg.Version, req.ComagicToken)
-	cmOfflineMessageRepo := cmRepo.NewOfflineMessageRepository(*clComagic, s.logger)
+	cmOfflineMessageRepo := cmRepo.NewOfflineMessageRepository(clComagic, s.logger)
 
 	bqClient, err := bigquery.NewClient(context.Background(), req.BqConfig.ProjectID, option.WithCredentialsFile(bqServiceKey))
 	if err != nil {
+		s.logger.Err(err).Msg("ошибка формирования клиента Big Query")
 		return &pb.PushOfflineMessagesToBQResponse{
 			IsOK: false,
 		}, fmt.Errorf("ошибка формирования клиента Big Query: %s", err)
 	}
-	bqOfflineMessageRepo := cmBQ.NewOfflineMessageRepository(*bqClient, req.BqConfig.DatasetID, req.BqConfig.TableID, s.logger)
+
+	defer func(bqClient *bigquery.Client) {
+		err := bqClient.Close()
+		if err != nil {
+			s.logger.Err(err).Msg("ошибка закрытия клиента Big Query")
+		}
+	}(bqClient)
+
+	bqOfflineMessageRepo := cmBQ.NewOfflineMessageRepository(bqClient, req.BqConfig.DatasetID, req.BqConfig.TableID, s.logger)
 
 	csClient, err := storage.NewClient(ctx, option.WithCredentialsFile(csServiceKey))
 	if err != nil {
+		s.logger.Err(err).Msg("ошибка формирования клиента Cloud Storage")
 		return &pb.PushOfflineMessagesToBQResponse{
 			IsOK: false,
 		}, fmt.Errorf("ошибка формирования клиента Cloud Storage: %s", err)
 	}
-	csOfflineMessageRepo := cmCS.NewOfflineMessageRepository(*csClient, req.CsConfig.BucketName, s.logger)
+
+	defer func(csClient *storage.Client) {
+		err := csClient.Close()
+		if err != nil {
+			s.logger.Err(err).Msg("ошибка закрытия клиента Cloud Storage")
+		}
+	}(csClient)
+
+	csOfflineMessageRepo := cmCS.NewOfflineMessageRepository(csClient, req.CsConfig.BucketName, s.logger)
 
 	srv := service.NewOfflineMessageService(cmOfflineMessageRepo, bqOfflineMessageRepo, csOfflineMessageRepo, s.logger)
 	cmPolicy := policy.NewOfflineMessagePolicy(*srv)
 
-	err = cmPolicy.PushOfflineMessageToBQ(dateFrom, dateTill, fields, req.CsConfig.BucketName)
+	s.logger.Info().Str("client", req.BqConfig.ProjectID).Msg("PushOfflineMessagesToBQ started")
+	err = cmPolicy.PushOfflineMessageToBQ(dateFrom, dateTill.AddDate(0, 0, 1), fields, req.CsConfig.BucketName)
 	if err != nil {
+		s.logger.Err(err).Msg("ошибка выполнения")
 		return &pb.PushOfflineMessagesToBQResponse{
 			IsOK: false,
 		}, fmt.Errorf("ошибка выполнения: %s", err)
 	}
 
+	s.logger.Info().Str("client", req.BqConfig.ProjectID).Msg("PushOfflineMessagesToBQ done")
 	return &pb.PushOfflineMessagesToBQResponse{
 		IsOK: true,
 	}, nil

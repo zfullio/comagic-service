@@ -9,38 +9,54 @@ import (
 )
 
 type callRepository struct {
-	db        bigquery.Client
-	datasetID string
-	tableID   string
-	logger    *zerolog.Logger
+	db     *bigquery.Client
+	table  *bigquery.Table
+	logger *zerolog.Logger
 }
 
-func NewCallRepository(client bigquery.Client, datasetID string, tableID string, logger *zerolog.Logger) *callRepository {
+func NewCallRepository(client *bigquery.Client, datasetID string, tableID string, logger *zerolog.Logger) *callRepository {
 	repoLogger := logger.With().Str("repo", "call").Str("type", "bigquery").Logger()
 
+	dataset := client.Dataset(datasetID)
+	table := dataset.Table(tableID)
+
 	return &callRepository{
-		db:        client,
-		datasetID: datasetID,
-		tableID:   tableID,
-		logger:    &repoLogger,
+		db:     client,
+		table:  table,
+		logger: &repoLogger,
 	}
 }
 
-func (cr callRepository) CreateTable(ctx context.Context) (err error) {
-	cr.logger.Trace().Msgf("createTable: %v.%v", cr.datasetID, cr.tableID)
+func (cr callRepository) TableExists(ctx context.Context) (err error) {
+	cr.logger.Trace().Msg("TableExists")
 
-	myDataset := cr.db.Dataset(cr.datasetID)
-	err = CreateTable(ctx, CallDTO{}, myDataset, cr.tableID)
+	err = TableExists(ctx, cr.table)
 	if err != nil {
-		return fmt.Errorf("createTable: %w", err)
+		return err
 	}
+
 	return nil
 }
 
-func (cr callRepository) DeleteByDateColumn(ctx context.Context, dateColumn string, dateStart time.Time, dateFinish time.Time) (err error) {
-	cr.logger.Trace().Msgf("deleteByDateColumn: %v.%v", cr.datasetID, cr.tableID)
+func (cr callRepository) CreateTable(ctx context.Context) (err error) {
+	cr.logger.Trace().Msg("createTable")
 
-	err = DeleteByDateColumn(ctx, cr.db, cr.datasetID, cr.tableID, dateColumn, dateStart, dateFinish)
+	fieldClustering := []string{"campaign_id", "utm_source", "utm_medium"}
+	fieldPartition := "date"
+	err = CreateTable(ctx, CallDTO{}, cr.table, &fieldPartition, &fieldClustering)
+	if err != nil {
+		return fmt.Errorf("createTable: %w", err)
+	}
+
+	return nil
+}
+
+func (cr callRepository) DeleteByDateColumn(ctx context.Context, dateStart time.Time, dateFinish time.Time) (err error) {
+	cr.logger.Trace().Msg("deleteByDateColumn")
+
+	dateColumn := "date"
+
+	err = DeleteByDateColumn(ctx, cr.db, cr.table, dateColumn, dateStart, dateFinish)
 	if err != nil {
 		return fmt.Errorf("DeleteByDateColumn: %w", err)
 	}
@@ -49,12 +65,9 @@ func (cr callRepository) DeleteByDateColumn(ctx context.Context, dateColumn stri
 }
 
 func (cr callRepository) SendFromCS(ctx context.Context, bucket string, object string) (err error) {
-	cr.logger.Trace().Msgf("sendFromCS: %v.%v", cr.datasetID, cr.tableID)
+	cr.logger.Trace().Msg("sendFromCS")
 
-	myDataset := cr.db.Dataset(cr.datasetID)
-	table := myDataset.Table(cr.tableID)
-
-	err = SendFromCS(ctx, CallDTO{}, table, bucket, object)
+	err = SendFromCS(ctx, CallDTO{}, cr.table, bucket, object)
 	if err != nil {
 		return fmt.Errorf("SendFromCS: %w", err)
 	}
@@ -73,10 +86,10 @@ type CallDTO struct {
 	Source                        bigquery.NullString    `bigquery:"source"`
 	CommunicationNumber           bigquery.NullInt64     `bigquery:"communication_number"`
 	CommunicationPageUrl          bigquery.NullString    `bigquery:"communication_page_url"`
-	CommunicationId               bigquery.NullString    `bigquery:"communication_id"`
+	CommunicationId               bigquery.NullInt64     `bigquery:"communication_id"`
 	CommunicationType             bigquery.NullString    `bigquery:"communication_type"`
 	IsLost                        bigquery.NullBool      `bigquery:"is_lost"`
-	CpnRegionId                   bigquery.NullString    `bigquery:"cpn_region_id"`
+	CpnRegionId                   bigquery.NullInt64     `bigquery:"cpn_region_id"`
 	CpnRegionName                 bigquery.NullString    `bigquery:"cpn_region_name"`
 	WaitDuration                  bigquery.NullInt64     `bigquery:"wait_duration"`
 	TotalWaitDuration             bigquery.NullInt64     `bigquery:"total_wait_duration"`
@@ -99,18 +112,18 @@ type CallDTO struct {
 	Ymclid                        bigquery.NullString    `bigquery:"ymclid"`
 	EfId                          bigquery.NullString    `bigquery:"ef_id"`
 	Channel                       bigquery.NullString    `bigquery:"channel"`
-	SiteId                        bigquery.NullString    `bigquery:"site_id"`
+	SiteId                        bigquery.NullInt64     `bigquery:"site_id"`
 	SiteDomainName                bigquery.NullString    `bigquery:"site_domain_name"`
-	CampaignId                    bigquery.NullString    `bigquery:"campaign_id"`
+	CampaignId                    bigquery.NullInt64     `bigquery:"campaign_id"`
 	CampaignName                  bigquery.NullString    `bigquery:"campaign_name"`
 	AutoCallCampaignName          bigquery.NullString    `bigquery:"auto_call_campaign_name"`
 	VisitOtherCampaign            bigquery.NullBool      `bigquery:"visit_other_campaign"`
-	VisitorId                     bigquery.NullString    `bigquery:"visitor_id"`
-	PersonId                      bigquery.NullString    `bigquery:"person_id"`
+	VisitorId                     bigquery.NullInt64     `bigquery:"visitor_id"`
+	PersonId                      bigquery.NullInt64     `bigquery:"person_id"`
 	VisitorType                   bigquery.NullString    `bigquery:"visitor_type"`
-	VisitorSessionId              bigquery.NullString    `bigquery:"visitor_session_id"`
+	VisitorSessionId              bigquery.NullInt64     `bigquery:"visitor_session_id"`
 	VisitsCount                   bigquery.NullInt64     `bigquery:"visits_count"`
-	VisitorFirstCampaignId        bigquery.NullString    `bigquery:"visitor_first_campaign_id"`
+	VisitorFirstCampaignId        bigquery.NullInt64     `bigquery:"visitor_first_campaign_id"`
 	VisitorFirstCampaignName      bigquery.NullString    `bigquery:"visitor_first_campaign_name"`
 	VisitorCity                   bigquery.NullString    `bigquery:"visitor_city"`
 	VisitorRegion                 bigquery.NullString    `bigquery:"visitor_region"`
@@ -119,7 +132,7 @@ type CallDTO struct {
 	LastAnsweredEmployeeId        bigquery.NullString    `bigquery:"last_answered_employee_id"`
 	LastAnsweredEmployeeFullName  bigquery.NullString    `bigquery:"last_answered_employee_full_name"`
 	LastAnsweredEmployeeRating    bigquery.NullInt64     `bigquery:"last_answered_employee_rating"`
-	FirstAnsweredEmployeeId       bigquery.NullString    `bigquery:"first_answered_employee_id"`
+	FirstAnsweredEmployeeId       bigquery.NullInt64     `bigquery:"first_answered_employee_id"`
 	FirstAnsweredEmployeeFullName bigquery.NullString    `bigquery:"first_answered_employee_full_name"`
 	ScenarioId                    bigquery.NullString    `bigquery:"scenario_id"`
 	ScenarioName                  bigquery.NullString    `bigquery:"scenario_name"`

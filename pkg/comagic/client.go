@@ -62,14 +62,16 @@ type RespError struct {
 type Metadata struct {
 	TotalItems int         `json:"total_items"`
 	Version    interface{} `json:"version"`
-	Limits     struct {
-		DayLimit        int `json:"day_limit"`
-		DayRemaining    int `json:"day_remaining"`
-		DayReset        int `json:"day_reset"`
-		MinuteLimit     int `json:"minute_limit"`
-		MinuteRemaining int `json:"minute_remaining"`
-		MinuteReset     int `json:"minute_reset"`
-	} `json:"limits"`
+	Limits     Limits      `json:"limits"`
+}
+
+type Limits struct {
+	DayLimit        int `json:"day_limit"`
+	DayRemaining    int `json:"day_remaining"`
+	DayReset        int `json:"day_reset"`
+	MinuteLimit     int `json:"minute_limit"`
+	MinuteRemaining int `json:"minute_remaining"`
+	MinuteReset     int `json:"minute_reset"`
 }
 
 func (e *RespError) Error() string {

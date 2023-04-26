@@ -3,90 +3,11 @@ package config
 import (
 	"fmt"
 	"github.com/ilyakaznacheev/cleanenv"
-	"github.com/pkg/errors"
 )
-
-type CliConfig struct {
-	TG                 `yaml:"tg"`
-	Comagic            `yaml:"comagic"`
-	CallReport         `yaml:"call_report"`
-	CampaignReport     `yaml:"campaign_report"`
-	CampaignConditions `yaml:"campaign_conditions"`
-	BQ                 `yaml:"bq"`
-	CS                 `yaml:"cloud_storage"`
-}
-
-func (cfg CliConfig) Check() error {
-	if cfg.Comagic.Version == "" {
-		return errors.New("can't find Comagic.Version")
-	}
-	if cfg.Comagic.Token == "" {
-		return errors.New("can't find Comagic.Token")
-	}
-	if cfg.CallReport.DatasetID == "" {
-		return errors.New("can't find CallReport.DatasetID")
-	}
-	if cfg.CallReport.TableID == "" {
-		return errors.New("can't find CallReport.TableID")
-	}
-	if cfg.CampaignReport.DatasetID == "" {
-		return errors.New("can't find CampaignReport.DatasetID")
-	}
-	if cfg.CampaignReport.TableID == "" {
-		return errors.New("can't find CampaignReport.TableID")
-	}
-	if cfg.BQ.ServiceKeyPath == "" {
-		return errors.New("can't find BQ.ServiceKeyPath")
-	}
-	if cfg.BQ.ProjectID == "" {
-		return errors.New("can't find BQ.ProjectID")
-	}
-	if cfg.BQ.DatasetID == "" {
-		return errors.New("can't find BQ.DatasetID")
-	}
-	if cfg.CS.ServiceKeyPath == "" {
-		return errors.New("can't find CS.ServiceKeyPath")
-	}
-	if cfg.CS.BucketName == "" {
-		return errors.New("can't find CS.BucketName")
-	}
-	return nil
-}
 
 type Comagic struct {
 	Version string `yaml:"version" env:"COMAGIC_VERSION"`
 	Token   string `yaml:"token"`
-}
-
-type BQ struct {
-	ServiceKeyPath string `yaml:"service_key_path"`
-	ProjectID      string `yaml:"project_id"`
-	DatasetID      string `yaml:"dataset_id"`
-}
-
-type CS struct {
-	ServiceKeyPath string `yaml:"service_key_path"`
-	BucketName     string `yaml:"bucket_name"`
-}
-
-type CallReport struct {
-	DatasetID string `yaml:"dataset_id"`
-	TableID   string `yaml:"table_id"`
-}
-
-type OfflineMessageReport struct {
-	DatasetID string `yaml:"dataset_id"`
-	TableID   string `yaml:"table_id"`
-}
-
-type CampaignReport struct {
-	DatasetID string `yaml:"dataset_id"`
-	TableID   string `yaml:"table_id"`
-}
-
-type CampaignConditions struct {
-	DatasetID string `yaml:"dataset_id"`
-	TableID   string `yaml:"table_id"`
 }
 
 type TG struct {
@@ -95,29 +16,11 @@ type TG struct {
 	Chat      int64  `yaml:"chat" env:"TG_CHAT"`
 }
 
-func NewCliConfig(filePath string, useEnv bool) (*CliConfig, error) {
-	cfg := &CliConfig{}
-
-	if useEnv {
-		err := cleanenv.ReadEnv(cfg)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		err := cleanenv.ReadConfig(filePath, cfg)
-		if err != nil {
-			return nil, fmt.Errorf("config error: %w", err)
-		}
-	}
-
-	return cfg, nil
-}
-
 type ServerConfig struct {
-	TG      `yaml:"tg"`
+	KeysDir string `yaml:"keys_dir" env:"KEYS_DIR"`
 	GRPC    `yaml:"grpc"`
 	Comagic `yaml:"comagic"`
-	KeysDir string `yaml:"keys_dir" env:"KEYS_DIR"`
+	TG      `yaml:"tg"`
 }
 
 type GRPC struct {
@@ -143,76 +46,29 @@ func NewServerConfig(filePath string, useEnv bool) (*ServerConfig, error) {
 	return cfg, nil
 }
 
+type Report struct {
+	ObjectName          string `yaml:"object"`
+	ComagicToken        string `yaml:"comagic_token"`
+	GoogleServiceKey    string `yaml:"google_service_key"`
+	ProjectId           string `yaml:"project_id"`
+	DatasetId           string `yaml:"dataset_id"`
+	BucketName          string `yaml:"bucket_name"`
+	OfflineMessageTable string `yaml:"offline_message_table"`
+	CallsTable          string `yaml:"calls_table"`
+}
+
 type ScheduleConfig struct {
-	Time                 `yaml:"time"`
-	TG                   `yaml:"tg"`
-	Comagic              `yaml:"comagic"`
-	CallReport           `yaml:"call_report"`
-	OfflineMessageReport `yaml:"offline_message_report"`
-	CampaignReport       `yaml:"campaign_report"`
-	CampaignConditions   `yaml:"campaign_conditions"`
-	BQ                   `yaml:"bq"`
-	CS                   `yaml:"cloud_storage"`
+	Time    string `yaml:"time"`
+	GRPC    `yaml:"grpc"`
+	Reports []Report `yaml:"reports"`
 }
 
-type Time struct {
-	All string `yaml:"all" `
-}
-
-func NewScheduleConfig(filePath string, useEnv bool) (*ScheduleConfig, error) {
+func NewScheduleConfig(filePath string) (*ScheduleConfig, error) {
 	cfg := &ScheduleConfig{}
-
-	if useEnv {
-		err := cleanenv.ReadEnv(cfg)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		err := cleanenv.ReadConfig(filePath, cfg)
-		if err != nil {
-			return nil, fmt.Errorf("config error: %w", err)
-		}
+	err := cleanenv.ReadConfig(filePath, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("config error: %w", err)
 	}
 
 	return cfg, nil
-}
-
-func (cfg ScheduleConfig) Check() error {
-	if cfg.Time.All == "" {
-		return errors.New("can't find Time.All")
-	}
-	if cfg.Comagic.Version == "" {
-		return errors.New("can't find Comagic.Version")
-	}
-	if cfg.Comagic.Token == "" {
-		return errors.New("can't find Comagic.Token")
-	}
-	if cfg.CallReport.DatasetID == "" {
-		return errors.New("can't find CallReport.DatasetID")
-	}
-	if cfg.CallReport.TableID == "" {
-		return errors.New("can't find CallReport.TableID")
-	}
-	if cfg.CampaignReport.DatasetID == "" {
-		return errors.New("can't find CampaignReport.TableID")
-	}
-	if cfg.CampaignReport.TableID == "" {
-		return errors.New("can't find CampaignReport.TableID")
-	}
-	if cfg.BQ.ServiceKeyPath == "" {
-		return errors.New("can't find BQ.ServiceKeyPath")
-	}
-	if cfg.BQ.ProjectID == "" {
-		return errors.New("can't find BQ.ProjectID")
-	}
-	if cfg.BQ.DatasetID == "" {
-		return errors.New("can't find BQ.DatasetID")
-	}
-	if cfg.CS.ServiceKeyPath == "" {
-		return errors.New("can't find CS.ServiceKeyPath")
-	}
-	if cfg.CS.BucketName == "" {
-		return errors.New("can't find CS.BucketName")
-	}
-	return nil
 }

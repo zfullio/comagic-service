@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Comagic/internal/app_server"
+	"Comagic/internal/app/server"
 	"Comagic/internal/config"
 	"context"
 	"flag"
@@ -13,8 +13,6 @@ import (
 	"time"
 )
 
-const appName = "Comagic (Service)"
-
 func main() {
 	var fileConfig = flag.String("f", "config.yml", "configuration file")
 	var useEnv = flag.Bool("env", false, "use environment variables")
@@ -22,13 +20,26 @@ func main() {
 	flag.Parse()
 
 	buildInfo, _ := debug.ReadBuildInfo()
-	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}).
-		With().
-		Timestamp().
-		Caller().
-		Int("pid", os.Getpid()).
-		Str("go_version", buildInfo.GoVersion).
-		Logger()
+
+	var logger zerolog.Logger
+	if *trace {
+		logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}).
+			Level(zerolog.TraceLevel).
+			With().
+			Timestamp().
+			Caller().
+			Int("pid", os.Getpid()).
+			Str("go_version", buildInfo.GoVersion).
+			Logger()
+		logger.Info().Msg("Logging level = Trace")
+	} else {
+		logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}).
+			Level(zerolog.InfoLevel).
+			With().
+			Timestamp().
+			Caller().
+			Logger()
+	}
 
 	if !*useEnv {
 		logger.Info().Msgf("configuration file: %s", *fileConfig)
@@ -60,7 +71,7 @@ func main() {
 		notify.Disable(appNotify)
 	}
 
-	a := app_server.NewApp(cfg, &logger, appNotify)
+	a := server.NewApp(cfg, &logger, appNotify)
 
 	ctx := context.Background()
 	err = a.Run(ctx)
