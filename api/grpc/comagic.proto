@@ -3,32 +3,34 @@ syntax = "proto3";
 option go_package = "./pb";
 
 service ComagicService {
-  rpc PushCallsToBQ(PushCallsToBQRequest) returns(PushCallsToBQResponse);
-  rpc PushOfflineMessagesToBQ(PushOfflineMessagesToBQRequest) returns(PushOfflineMessagesToBQResponse);
-  rpc GetCampaigns(GetCampaignsRequest) returns(GetCampaignsResponse);
-  rpc GetCampaignsConditions(GetCampaignsConditionsRequest) returns(GetCampaignsConditionsResponse);
+  rpc PushCallsToBQ(PushCallsToBQRequest) returns(PushCallsToBQResponse); // Отправка звонков в BigQuery
+  rpc PushOfflineMessagesToBQ(PushOfflineMessagesToBQRequest) returns(PushOfflineMessagesToBQResponse); // Отправка заявок в BigQuery
+  rpc GetCampaigns(GetCampaignsRequest) returns(GetCampaignsResponse);  // Не реализовано
+  rpc GetCampaignsConditions(GetCampaignsConditionsRequest) returns(GetCampaignsConditionsResponse); // Не реализовано
 }
 
+//Конфигурация для BigQuery
 message BqConfig{
   string projectID = 1;
   string datasetID = 2;
   string tableID = 3;
-  string serviceKey = 4;
+  string serviceKey = 4; // Название файла сервисного ключа
 }
+
+//Конфигурация для CloudStorage
 message CsConfig{
   string serviceKey = 1;
-  string bucketName = 2;
+  string bucketName = 2; // Название файла сервисного ключа
 }
 
 
 message PushCallsToBQRequest{
   string comagicToken = 1;
-  BqConfig bqConfig = 2;
-  CsConfig csConfig = 3;
-  // dateFrom is date represented in the ISO-8601 format
-  string dateFrom = 4;
-  // dateTill is date represented in the ISO-8601 format
-  string dateTill = 5;
+  BqConfig bqConfig = 2; //Конфигурация для BigQuery
+  CsConfig csConfig = 3; //Конфигурация для CloudStorage
+
+  string dateFrom = 4; // dateFrom is date represented in the ISO-8601 format
+  string dateTill = 5; // dateTill is date represented in the ISO-8601 format
 }
 message PushCallsToBQResponse{
   bool isOK = 1;
@@ -37,12 +39,11 @@ message PushCallsToBQResponse{
 
 message PushOfflineMessagesToBQRequest{
   string comagicToken = 1;
-  BqConfig bqConfig = 2;
-  CsConfig csConfig = 3;
-  // dateFrom is date represented in the ISO-8601 format
-  string dateFrom = 4;
-  // dateTill is date represented in the ISO-8601 format
-  string dateTill = 5;
+  BqConfig bqConfig = 2; //Конфигурация для BigQuery
+  CsConfig csConfig = 3; //Конфигурация для CloudStorage
+
+  string dateFrom = 4; // dateFrom is date represented in the ISO-8601 format
+  string dateTill = 5; // dateTill is date represented in the ISO-8601 format
 }
 message PushOfflineMessagesToBQResponse{
   bool isOK = 1;
