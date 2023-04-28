@@ -1,4 +1,4 @@
-gen:
+gen_go:
 	protoc --go_out=. --go-grpc_out=.  api/grpc/*.proto
 
 gen_python:

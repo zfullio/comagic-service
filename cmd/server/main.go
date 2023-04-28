@@ -37,7 +37,6 @@ func main() {
 			Level(zerolog.InfoLevel).
 			With().
 			Timestamp().
-			Caller().
 			Logger()
 	}
 
@@ -45,12 +44,6 @@ func main() {
 		logger.Info().Msgf("configuration file: %s", *fileConfig)
 	} else {
 		logger.Info().Msg("configuration from ENV")
-	}
-
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	if *trace {
-		logger.Info().Msg("Logging level = Trace")
-		zerolog.SetGlobalLevel(zerolog.TraceLevel)
 	}
 
 	cfg, err := config.NewServerConfig(*fileConfig, *useEnv)

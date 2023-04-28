@@ -16,19 +16,25 @@ import (
 )
 
 func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOfflineMessagesToBQRequest) (*pb.PushOfflineMessagesToBQResponse, error) {
-	s.logger.Info().Str("client", req.BqConfig.ProjectID).Msg("PushOfflineMessagesToBQ prepare")
+	methodLogger := s.logger.With().Str("method", "PushOfflineMessagesToBQ").Str("client", req.BqConfig.ProjectID).Logger()
+
+	methodLogger.Info().Msg(msgMethodPrepared)
+
+	defer methodLogger.Info().Msg(msgMethodFinished)
 
 	bqServiceKey := s.cfg.KeysDir + "/" + req.BqConfig.ServiceKey
 	csServiceKey := s.cfg.KeysDir + "/" + req.CsConfig.ServiceKey
 
 	dateFrom, err := pbDateNormalize(req.DateFrom)
 	if err != nil {
+		methodLogger.Error().Err(err).Msg(msgErrMethod)
 		return &pb.PushOfflineMessagesToBQResponse{
 			IsOK: false,
 		}, fmt.Errorf("wrong value in field 'dateFrom' : %s", err)
 	}
 	dateTill, err := pbDateNormalize(req.DateTill)
 	if err != nil {
+		methodLogger.Error().Err(err).Msg(msgErrMethod)
 		return &pb.PushOfflineMessagesToBQResponse{
 			IsOK: false,
 		}, fmt.Errorf("wrong value in field 'dateTill' : %s", err)
@@ -117,7 +123,7 @@ func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOffline
 
 	bqClient, err := bigquery.NewClient(context.Background(), req.BqConfig.ProjectID, option.WithCredentialsFile(bqServiceKey))
 	if err != nil {
-		s.logger.Err(err).Msg("ошибка формирования клиента Big Query")
+		methodLogger.Error().Err(err).Msg(msgErrMethod)
 		return &pb.PushOfflineMessagesToBQResponse{
 			IsOK: false,
 		}, fmt.Errorf("ошибка формирования клиента Big Query: %s", err)
@@ -126,7 +132,7 @@ func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOffline
 	defer func(bqClient *bigquery.Client) {
 		err := bqClient.Close()
 		if err != nil {
-			s.logger.Err(err).Msg("ошибка закрытия клиента Big Query")
+			methodLogger.Err(err).Msg("ошибка закрытия клиента Big Query")
 		}
 	}(bqClient)
 
@@ -134,7 +140,7 @@ func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOffline
 
 	csClient, err := storage.NewClient(ctx, option.WithCredentialsFile(csServiceKey))
 	if err != nil {
-		s.logger.Err(err).Msg("ошибка формирования клиента Cloud Storage")
+		methodLogger.Error().Err(err).Msg(msgErrMethod)
 		return &pb.PushOfflineMessagesToBQResponse{
 			IsOK: false,
 		}, fmt.Errorf("ошибка формирования клиента Cloud Storage: %s", err)
@@ -143,7 +149,7 @@ func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOffline
 	defer func(csClient *storage.Client) {
 		err := csClient.Close()
 		if err != nil {
-			s.logger.Err(err).Msg("ошибка закрытия клиента Cloud Storage")
+			methodLogger.Err(err).Msg("ошибка закрытия клиента Cloud Storage")
 		}
 	}(csClient)
 
@@ -152,7 +158,7 @@ func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOffline
 	srv := service.NewOfflineMessageService(cmOfflineMessageRepo, bqOfflineMessageRepo, csOfflineMessageRepo, s.logger)
 	cmPolicy := policy.NewOfflineMessagePolicy(*srv)
 
-	s.logger.Info().Str("client", req.BqConfig.ProjectID).Msg("PushOfflineMessagesToBQ started")
+	methodLogger.Info().Msg(msgMethodStarted)
 	err = cmPolicy.PushOfflineMessageToBQ(dateFrom, dateTill.AddDate(0, 0, 1), fields, req.CsConfig.BucketName)
 	if err != nil {
 		s.logger.Err(err).Msg("ошибка выполнения")
@@ -161,7 +167,6 @@ func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOffline
 		}, fmt.Errorf("ошибка выполнения: %s", err)
 	}
 
-	s.logger.Info().Str("client", req.BqConfig.ProjectID).Msg("PushOfflineMessagesToBQ done")
 	return &pb.PushOfflineMessagesToBQResponse{
 		IsOK: true,
 	}, nil
