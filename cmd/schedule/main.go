@@ -68,8 +68,8 @@ func scheduleRun(cfg config.ScheduleConfig) {
 		callsReq, err := c.PushCallsToBQ(ctx, &pb.PushCallsToBQRequest{
 			ComagicToken: report.ComagicToken,
 			BqConfig: &pb.BqConfig{
-				ProjectID:  report.ProjectId,
-				DatasetID:  report.DatasetId,
+				ProjectID:  report.ProjectID,
+				DatasetID:  report.DatasetID,
 				TableID:    report.CallsTable,
 				ServiceKey: report.GoogleServiceKey,
 			},
@@ -88,8 +88,8 @@ func scheduleRun(cfg config.ScheduleConfig) {
 		messagesReq, err := c.PushOfflineMessagesToBQ(ctx, &pb.PushOfflineMessagesToBQRequest{
 			ComagicToken: report.ComagicToken,
 			BqConfig: &pb.BqConfig{
-				ProjectID:  report.ProjectId,
-				DatasetID:  report.DatasetId,
+				ProjectID:  report.ProjectID,
+				DatasetID:  report.DatasetID,
 				TableID:    report.OfflineMessageTable,
 				ServiceKey: report.GoogleServiceKey,
 			},

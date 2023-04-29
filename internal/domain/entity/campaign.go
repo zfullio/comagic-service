@@ -7,7 +7,7 @@ type Campaign struct {
 	Status              string              `json:"status"`
 	CreationTime        string              `json:"creation_time"`
 	Description         string              `json:"description"`
-	SiteId              int64               `json:"site_id"`
+	SiteID              int64               `json:"site_id"`
 	SiteDomainName      string              `json:"site_domain_name"`
 	Costs               float64             `json:"costs"`
 	CostRatio           float64             `json:"cost_ratio"`

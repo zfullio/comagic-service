@@ -28,13 +28,16 @@ func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOffline
 	dateFrom, err := pbDateNormalize(req.DateFrom)
 	if err != nil {
 		methodLogger.Error().Err(err).Msg(msgErrMethod)
+
 		return &pb.PushOfflineMessagesToBQResponse{
 			IsOK: false,
 		}, fmt.Errorf("wrong value in field 'dateFrom' : %s", err)
 	}
+
 	dateTill, err := pbDateNormalize(req.DateTill)
 	if err != nil {
 		methodLogger.Error().Err(err).Msg(msgErrMethod)
+
 		return &pb.PushOfflineMessagesToBQResponse{
 			IsOK: false,
 		}, fmt.Errorf("wrong value in field 'dateTill' : %s", err)
@@ -121,9 +124,10 @@ func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOffline
 	clComagic := comagic.NewClient(comagic.DataAPI, s.cfg.Version, req.ComagicToken)
 	cmOfflineMessageRepo := cmRepo.NewOfflineMessageRepository(clComagic, s.logger)
 
-	bqClient, err := bigquery.NewClient(context.Background(), req.BqConfig.ProjectID, option.WithCredentialsFile(bqServiceKey))
+	bqClient, err := bigquery.NewClient(ctx, req.BqConfig.ProjectID, option.WithCredentialsFile(bqServiceKey))
 	if err != nil {
 		methodLogger.Error().Err(err).Msg(msgErrMethod)
+
 		return &pb.PushOfflineMessagesToBQResponse{
 			IsOK: false,
 		}, fmt.Errorf("ошибка формирования клиента Big Query: %s", err)
@@ -141,6 +145,7 @@ func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOffline
 	csClient, err := storage.NewClient(ctx, option.WithCredentialsFile(csServiceKey))
 	if err != nil {
 		methodLogger.Error().Err(err).Msg(msgErrMethod)
+
 		return &pb.PushOfflineMessagesToBQResponse{
 			IsOK: false,
 		}, fmt.Errorf("ошибка формирования клиента Cloud Storage: %s", err)
@@ -159,9 +164,11 @@ func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOffline
 	cmPolicy := policy.NewOfflineMessagePolicy(*srv)
 
 	methodLogger.Info().Msg(msgMethodStarted)
+
 	err = cmPolicy.PushOfflineMessageToBQ(dateFrom, dateTill.AddDate(0, 0, 1), fields, req.CsConfig.BucketName)
 	if err != nil {
 		s.logger.Err(err).Msg("ошибка выполнения")
+
 		return &pb.PushOfflineMessagesToBQResponse{
 			IsOK: false,
 		}, fmt.Errorf("ошибка выполнения: %s", err)

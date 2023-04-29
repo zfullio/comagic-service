@@ -50,8 +50,8 @@ type Report struct {
 	ObjectName          string `yaml:"object"`
 	ComagicToken        string `yaml:"comagic_token"`
 	GoogleServiceKey    string `yaml:"google_service_key"`
-	ProjectId           string `yaml:"project_id"`
-	DatasetId           string `yaml:"dataset_id"`
+	ProjectID           string `yaml:"project_id"`
+	DatasetID           string `yaml:"dataset_id"`
 	BucketName          string `yaml:"bucket_name"`
 	OfflineMessageTable string `yaml:"offline_message_table"`
 	CallsTable          string `yaml:"calls_table"`
@@ -65,6 +65,7 @@ type ScheduleConfig struct {
 
 func NewScheduleConfig(filePath string) (*ScheduleConfig, error) {
 	cfg := &ScheduleConfig{}
+
 	err := cleanenv.ReadConfig(filePath, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("config error: %w", err)

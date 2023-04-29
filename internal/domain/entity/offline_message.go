@@ -3,15 +3,15 @@ package entity
 import "time"
 
 type OfflineMessage struct {
-	Id                       int64   `json:"id"`
+	ID                       int64   `json:"id"`
 	DateTime                 string  `json:"date_time"`
 	Text                     string  `json:"text"`
 	CommunicationNumber      int64   `json:"communication_number"`
-	CommunicationPageUrl     string  `json:"communication_page_url"`
+	CommunicationPageURL     string  `json:"communication_page_url"`
 	CommunicationType        string  `json:"communication_type"`
-	CommunicationId          int64   `json:"communication_id"`
-	UaClientId               string  `json:"ua_client_id"`
-	YmClientId               string  `json:"ym_client_id"`
+	CommunicationID          int64   `json:"communication_id"`
+	UaClientID               string  `json:"ua_client_id"`
+	YmClientID               string  `json:"ym_client_id"`
 	SaleDate                 string  `json:"sale_date"`
 	SaleCost                 float64 `json:"sale_cost"`
 	Status                   string  `json:"status"`
@@ -26,29 +26,29 @@ type OfflineMessage struct {
 	Gclid                    string  `json:"gclid"`
 	Yclid                    string  `json:"yclid"`
 	Ymclid                   string  `json:"ymclid"`
-	EfId                     string  `json:"ef_id"`
+	EfID                     string  `json:"ef_id"`
 	Channel                  string  `json:"channel"`
-	EmployeeId               int64   `json:"employee_id"`
+	EmployeeID               int64   `json:"employee_id"`
 	EmployeeFullName         string  `json:"employee_full_name"`
 	EmployeeAnswerMessage    string  `json:"employee_answer_message"`
 	EmployeeComment          string  `json:"employee_comment"`
 	Tags                     string  `json:"tags"`
-	SiteId                   int64   `json:"site_id"`
+	SiteID                   int64   `json:"site_id"`
 	SiteDomainName           string  `json:"site_domain_name"`
-	GroupId                  int64   `json:"group_id"`
+	GroupID                  int64   `json:"group_id"`
 	GroupName                string  `json:"group_name"`
-	CampaignId               int64   `json:"campaign_id"`
+	CampaignID               int64   `json:"campaign_id"`
 	CampaignName             string  `json:"campaign_name"`
 	VisitOtherCampaign       bool    `json:"visit_other_campaign"`
-	VisitorId                int64   `json:"visitor_id"`
+	VisitorID                int64   `json:"visitor_id"`
 	VisitorName              string  `json:"visitor_name"`
 	VisitorPhoneNumber       string  `json:"visitor_phone_number"`
 	VisitorEmail             string  `json:"visitor_email"`
-	PersonId                 int64   `json:"person_id"`
+	PersonID                 int64   `json:"person_id"`
 	VisitorType              string  `json:"visitor_type"`
-	VisitorSessionId         int64   `json:"visitor_session_id"`
+	VisitorSessionID         int64   `json:"visitor_session_id"`
 	VisitsCount              int64   `json:"visits_count"`
-	VisitorFirstCampaignId   int64   `json:"visitor_first_campaign_id"`
+	VisitorFirstCampaignID   int64   `json:"visitor_first_campaign_id"`
 	VisitorFirstCampaignName string  `json:"visitor_first_campaign_name"`
 	VisitorCity              string  `json:"visitor_city"`
 	VisitorRegion            string  `json:"visitor_region"`
@@ -71,7 +71,7 @@ type OfflineMessage struct {
 	EqUtmReferrer            string  `json:"eq_utm_referrer"`
 	EqUtmExpid               string  `json:"eq_utm_expid"`
 	Attributes               string  `json:"attributes"`
-	SourceId                 int64   `json:"source_id"`
+	SourceID                 int64   `json:"source_id"`
 	SourceName               string  `json:"source_name"`
 	SourceNew                string  `json:"source_new"`
 	ChannelNew               string  `json:"channel_new"`
@@ -80,16 +80,16 @@ type OfflineMessage struct {
 }
 
 type OfflineMessageCSV struct {
-	Id                       int64   `csv:"id"`
+	ID                       int64   `csv:"id"`
 	Date                     string  `csv:"date"`
 	DateTime                 string  `csv:"date_time"`
 	Text                     string  `csv:"text"`
 	CommunicationNumber      int64   `csv:"communication_number"`
-	CommunicationPageUrl     string  `csv:"communication_page_url"`
+	CommunicationPageURL     string  `csv:"communication_page_url"`
 	CommunicationType        string  `csv:"communication_type"`
-	CommunicationId          int64   `csv:"communication_id"`
-	UaClientId               string  `csv:"ua_client_id"`
-	YmClientId               string  `csv:"ym_client_id"`
+	CommunicationID          int64   `csv:"communication_id"`
+	UaClientID               string  `csv:"ua_client_id"`
+	YmClientID               string  `csv:"ym_client_id"`
 	SaleDate                 string  `csv:"sale_date"`
 	SaleCost                 float64 `csv:"sale_cost"`
 	Status                   string  `csv:"status"`
@@ -104,29 +104,29 @@ type OfflineMessageCSV struct {
 	Gclid                    string  `csv:"gclid"`
 	Yclid                    string  `csv:"yclid"`
 	Ymclid                   string  `csv:"ymclid"`
-	EfId                     string  `csv:"ef_id"`
+	EfID                     string  `csv:"ef_id"`
 	Channel                  string  `csv:"channel"`
-	EmployeeId               int64   `csv:"employee_id"`
+	EmployeeID               int64   `csv:"employee_id"`
 	EmployeeFullName         string  `csv:"employee_full_name"`
 	EmployeeAnswerMessage    string  `csv:"employee_answer_message"`
 	EmployeeComment          string  `csv:"employee_comment"`
 	Tags                     string  `csv:"tags"`
-	SiteId                   int64   `csv:"site_id"`
+	SiteID                   int64   `csv:"site_id"`
 	SiteDomainName           string  `csv:"site_domain_name"`
-	GroupId                  int64   `csv:"group_id"`
+	GroupID                  int64   `csv:"group_id"`
 	GroupName                string  `csv:"group_name"`
-	CampaignId               int64   `csv:"campaign_id"`
+	CampaignID               int64   `csv:"campaign_id"`
 	CampaignName             string  `csv:"campaign_name"`
 	VisitOtherCampaign       bool    `csv:"visit_other_campaign"`
-	VisitorId                int64   `csv:"visitor_id"`
+	VisitorID                int64   `csv:"visitor_id"`
 	VisitorName              string  `csv:"visitor_name"`
 	VisitorPhoneNumber       string  `csv:"visitor_phone_number"`
 	VisitorEmail             string  `csv:"visitor_email"`
-	PersonId                 int64   `csv:"person_id"`
+	PersonID                 int64   `csv:"person_id"`
 	VisitorType              string  `csv:"visitor_type"`
-	VisitorSessionId         int64   `csv:"visitor_session_id"`
+	VisitorSessionID         int64   `csv:"visitor_session_id"`
 	VisitsCount              int64   `csv:"visits_count"`
-	VisitorFirstCampaignId   int64   `csv:"visitor_first_campaign_id"`
+	VisitorFirstCampaignID   int64   `csv:"visitor_first_campaign_id"`
 	VisitorFirstCampaignName string  `csv:"visitor_first_campaign_name"`
 	VisitorCity              string  `csv:"visitor_city"`
 	VisitorRegion            string  `csv:"visitor_region"`
@@ -149,7 +149,7 @@ type OfflineMessageCSV struct {
 	EqUtmReferrer            string  `csv:"eq_utm_referrer"`
 	EqUtmExpid               string  `csv:"eq_utm_expid"`
 	Attributes               string  `csv:"attributes"`
-	SourceId                 int64   `csv:"source_id"`
+	SourceID                 int64   `csv:"source_id"`
 	SourceName               string  `csv:"source_name"`
 	SourceNew                string  `csv:"source_new"`
 	ChannelNew               string  `csv:"channel_new"`

@@ -58,6 +58,7 @@ func (s CallService) SendAll(ctx context.Context, dateFrom time.Time, dateTill t
 	s.logger.Trace().Msg("SendAll")
 
 	dataForSend := make([]entity.CallCSV, 0, len(calls))
+
 	for _, call := range calls {
 		item := NewCallCSV(call)
 		dataForSend = append(dataForSend, *item)
@@ -81,6 +82,7 @@ func (s CallService) SendAll(ctx context.Context, dateFrom time.Time, dateTill t
 	}
 
 	s.logger.Info().Msgf("Отправка файла в Cloud Storage: %s", filename)
+
 	err = s.bq.SendFromCS(ctx, bucketName, filename)
 	if err != nil {
 		return fmt.Errorf("ошибка добавления в bq из storage: %w", err)
@@ -100,11 +102,11 @@ func NewCallCSV(call entity.Call) *entity.CallCSV {
 		Direction:                     call.Direction,
 		Source:                        call.Source,
 		CommunicationNumber:           call.CommunicationNumber,
-		CommunicationPageUrl:          call.CommunicationPageUrl,
-		CommunicationId:               call.CommunicationId,
+		CommunicationPageURL:          call.CommunicationPageURL,
+		CommunicationID:               call.CommunicationID,
 		CommunicationType:             call.CommunicationType,
 		IsLost:                        call.IsLost,
-		CpnRegionId:                   call.CpnRegionId,
+		CpnRegionID:                   call.CpnRegionID,
 		CpnRegionName:                 call.CpnRegionName,
 		WaitDuration:                  call.WaitDuration,
 		TotalWaitDuration:             call.TotalWaitDuration,
@@ -113,8 +115,8 @@ func NewCallCSV(call entity.Call) *entity.CallCSV {
 		CleanTalkDuration:             call.CleanTalkDuration,
 		TotalDuration:                 call.TotalDuration,
 		PostprocessDuration:           call.PostprocessDuration,
-		UaClientId:                    call.UaClientId,
-		YmClientId:                    call.YmClientId,
+		UaClientID:                    call.UaClientID,
+		YmClientID:                    call.YmClientID,
 		SaleDate:                      call.SaleDate,
 		SaleCost:                      call.SaleCost,
 		SearchQuery:                   call.SearchQuery,
@@ -125,37 +127,37 @@ func NewCallCSV(call entity.Call) *entity.CallCSV {
 		Gclid:                         call.Gclid,
 		Yclid:                         call.Yclid,
 		Ymclid:                        call.Ymclid,
-		EfId:                          call.EfId,
+		EfID:                          call.EfID,
 		Channel:                       call.Channel,
-		SiteId:                        call.SiteId,
+		SiteID:                        call.SiteID,
 		SiteDomainName:                call.SiteDomainName,
-		CampaignId:                    call.CampaignId,
+		CampaignID:                    call.CampaignID,
 		CampaignName:                  call.CampaignName,
 		AutoCallCampaignName:          call.AutoCallCampaignName,
 		VisitOtherCampaign:            call.VisitOtherCampaign,
-		VisitorId:                     call.VisitorId,
-		PersonId:                      call.PersonId,
+		VisitorID:                     call.VisitorID,
+		PersonID:                      call.PersonID,
 		VisitorType:                   call.VisitorType,
-		VisitorSessionId:              call.VisitorSessionId,
+		VisitorSessionID:              call.VisitorSessionID,
 		VisitsCount:                   call.VisitsCount,
-		VisitorFirstCampaignId:        call.VisitorFirstCampaignId,
+		VisitorFirstCampaignID:        call.VisitorFirstCampaignID,
 		VisitorFirstCampaignName:      call.VisitorFirstCampaignName,
 		VisitorCity:                   call.VisitorCity,
 		VisitorRegion:                 call.VisitorRegion,
 		VisitorCountry:                call.VisitorCountry,
 		VisitorDevice:                 call.VisitorDevice,
-		LastAnsweredEmployeeId:        call.LastAnsweredEmployeeId,
+		LastAnsweredEmployeeID:        call.LastAnsweredEmployeeID,
 		LastAnsweredEmployeeFullName:  call.LastAnsweredEmployeeFullName,
-		LastAnsweredEmployeeRating:    call.LastAnsweredEmployeeId,
-		FirstAnsweredEmployeeId:       call.FirstAnsweredEmployeeId,
+		LastAnsweredEmployeeRating:    call.LastAnsweredEmployeeID,
+		FirstAnsweredEmployeeID:       call.FirstAnsweredEmployeeID,
 		FirstAnsweredEmployeeFullName: call.FirstAnsweredEmployeeFullName,
-		ScenarioId:                    call.ScenarioId,
+		ScenarioID:                    call.ScenarioID,
 		ScenarioName:                  call.ScenarioName,
-		CallApiExternalId:             call.CallApiExternalId,
-		CallApiRequestId:              call.CallApiRequestId,
+		CallAPIExternalID:             call.CallAPIExternalID,
+		CallAPIRequestID:              call.CallAPIRequestID,
 		ContactPhoneNumber:            call.ContactPhoneNumber,
 		ContactFullName:               call.ContactFullName,
-		ContactId:                     call.ContactId,
+		ContactID:                     call.ContactID,
 		UtmSource:                     call.UtmSource,
 		UtmMedium:                     call.UtmMedium,
 		UtmTerm:                       call.UtmTerm,

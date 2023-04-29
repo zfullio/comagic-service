@@ -45,10 +45,12 @@ func NewOfflineMessageService(tracking OfflineMessagesRepositoryTracking, bq Off
 
 func (s OfflineMessageService) GetByDate(dateFrom time.Time, dateTill time.Time, fields []string) (messages []entity.OfflineMessage, err error) {
 	s.logger.Trace().Msg("GetByDate")
+
 	messages, err = s.tracking.GetByDate(dateFrom, dateTill, fields)
 	if err != nil {
 		return messages, err
 	}
+
 	return messages, err
 }
 
@@ -56,6 +58,7 @@ func (s OfflineMessageService) SendAll(ctx context.Context, dateFrom time.Time, 
 	s.logger.Trace().Msg("SendAll")
 
 	dataForSend := make([]entity.OfflineMessageCSV, 0, len(messages))
+
 	for _, msg := range messages {
 		item := NewOfflineMessageCSV(msg)
 		dataForSend = append(dataForSend, *item)
@@ -72,12 +75,14 @@ func (s OfflineMessageService) SendAll(ctx context.Context, dateFrom time.Time, 
 	}
 
 	s.logger.Info().Msgf("Удаление за %s -- %s", dateFrom.Format(time.DateOnly), dateTill.Format(time.DateOnly))
+
 	err = s.bq.DeleteByDateColumn(ctx, dateFrom, dateTill)
 	if err != nil {
 		return fmt.Errorf("ошибка удаления из bq: %w", err)
 	}
 
 	s.logger.Info().Msgf("Отправка файла в Cloud Storage: %s", filename)
+
 	err = s.bq.SendFromCS(ctx, bucketName, filename)
 	if err != nil {
 		return fmt.Errorf("ошибка добавления в bq из storage: %w", err)
@@ -88,16 +93,16 @@ func (s OfflineMessageService) SendAll(ctx context.Context, dateFrom time.Time, 
 
 func NewOfflineMessageCSV(message entity.OfflineMessage) *entity.OfflineMessageCSV {
 	return &entity.OfflineMessageCSV{
-		Id:                       message.Id,
+		ID:                       message.ID,
 		Date:                     strings.Split(message.DateTime, " ")[0],
 		DateTime:                 message.DateTime,
 		Text:                     message.Text,
 		CommunicationNumber:      message.CommunicationNumber,
-		CommunicationPageUrl:     message.CommunicationPageUrl,
+		CommunicationPageURL:     message.CommunicationPageURL,
 		CommunicationType:        message.CommunicationType,
-		CommunicationId:          message.CommunicationId,
-		UaClientId:               message.UaClientId,
-		YmClientId:               message.YmClientId,
+		CommunicationID:          message.CommunicationID,
+		UaClientID:               message.UaClientID,
+		YmClientID:               message.YmClientID,
 		SaleDate:                 message.SaleDate,
 		SaleCost:                 message.SaleCost,
 		Status:                   message.Status,
@@ -112,29 +117,29 @@ func NewOfflineMessageCSV(message entity.OfflineMessage) *entity.OfflineMessageC
 		Gclid:                    message.Gclid,
 		Yclid:                    message.Yclid,
 		Ymclid:                   message.Ymclid,
-		EfId:                     message.EfId,
+		EfID:                     message.EfID,
 		Channel:                  message.Channel,
-		EmployeeId:               message.EmployeeId,
+		EmployeeID:               message.EmployeeID,
 		EmployeeFullName:         message.EmployeeFullName,
 		EmployeeAnswerMessage:    message.EmployeeAnswerMessage,
 		EmployeeComment:          message.EmployeeComment,
 		Tags:                     message.Tags,
-		SiteId:                   message.SiteId,
+		SiteID:                   message.SiteID,
 		SiteDomainName:           message.SiteDomainName,
-		GroupId:                  message.GroupId,
+		GroupID:                  message.GroupID,
 		GroupName:                message.GroupName,
-		CampaignId:               message.CampaignId,
+		CampaignID:               message.CampaignID,
 		CampaignName:             message.CampaignName,
 		VisitOtherCampaign:       message.VisitOtherCampaign,
-		VisitorId:                message.VisitorId,
+		VisitorID:                message.VisitorID,
 		VisitorName:              message.VisitorName,
 		VisitorPhoneNumber:       message.VisitorPhoneNumber,
 		VisitorEmail:             message.VisitorEmail,
-		PersonId:                 message.PersonId,
+		PersonID:                 message.PersonID,
 		VisitorType:              message.VisitorType,
-		VisitorSessionId:         message.VisitorSessionId,
+		VisitorSessionID:         message.VisitorSessionID,
 		VisitsCount:              message.VisitsCount,
-		VisitorFirstCampaignId:   message.VisitorFirstCampaignId,
+		VisitorFirstCampaignID:   message.VisitorFirstCampaignID,
 		VisitorFirstCampaignName: message.VisitorFirstCampaignName,
 		VisitorCity:              message.VisitorCity,
 		VisitorRegion:            message.VisitorRegion,
@@ -157,7 +162,7 @@ func NewOfflineMessageCSV(message entity.OfflineMessage) *entity.OfflineMessageC
 		EqUtmReferrer:            message.EqUtmReferrer,
 		EqUtmExpid:               message.EqUtmExpid,
 		Attributes:               message.Attributes,
-		SourceId:                 message.SourceId,
+		SourceID:                 message.SourceID,
 		SourceName:               message.SourceName,
 		SourceNew:                message.SourceNew,
 		ChannelNew:               message.ChannelNew,

@@ -3,7 +3,7 @@ package entity
 import "time"
 
 type Call struct {
-	Id                            int64   `json:"id"`
+	ID                            int64   `json:"id"`
 	StartTime                     string  `json:"start_time"`
 	FinishTime                    string  `json:"finish_time"`
 	VirtualPhoneNumber            string  `json:"virtual_phone_number"`
@@ -12,11 +12,11 @@ type Call struct {
 	Direction                     string  `json:"direction"`
 	Source                        string  `json:"source"`
 	CommunicationNumber           int64   `json:"communication_number"`
-	CommunicationPageUrl          string  `json:"communication_page_url"`
-	CommunicationId               int64   `json:"communication_id"`
+	CommunicationPageURL          string  `json:"communication_page_url"`
+	CommunicationID               int64   `json:"communication_id"`
 	CommunicationType             string  `json:"communication_type"`
 	IsLost                        bool    `json:"is_lost"`
-	CpnRegionId                   int64   `json:"cpn_region_id"`
+	CpnRegionID                   int64   `json:"cpn_region_id"`
 	CpnRegionName                 string  `json:"cpn_region_name"`
 	WaitDuration                  int64   `json:"wait_duration"`
 	TotalWaitDuration             int64   `json:"total_wait_duration"`
@@ -25,8 +25,8 @@ type Call struct {
 	CleanTalkDuration             int64   `json:"clean_talk_duration"`
 	TotalDuration                 int64   `json:"total_duration"`
 	PostprocessDuration           int64   `json:"postprocess_duration"`
-	UaClientId                    string  `json:"ua_client_id"`
-	YmClientId                    string  `json:"ym_client_id"`
+	UaClientID                    string  `json:"ua_client_id"`
+	YmClientID                    string  `json:"ym_client_id"`
 	SaleDate                      string  `json:"sale_date"`
 	SaleCost                      float64 `json:"sale_cost"`
 	SearchQuery                   string  `json:"search_query"`
@@ -37,37 +37,37 @@ type Call struct {
 	Gclid                         string  `json:"gclid"`
 	Yclid                         string  `json:"yclid"`
 	Ymclid                        string  `json:"ymclid"`
-	EfId                          string  `json:"ef_id"`
+	EfID                          string  `json:"ef_id"`
 	Channel                       string  `json:"channel"`
-	SiteId                        int64   `json:"site_id"`
+	SiteID                        int64   `json:"site_id"`
 	SiteDomainName                string  `json:"site_domain_name"`
-	CampaignId                    int64   `json:"campaign_id"`
+	CampaignID                    int64   `json:"campaign_id"`
 	CampaignName                  string  `json:"campaign_name"`
 	AutoCallCampaignName          string  `json:"auto_call_campaign_name"`
 	VisitOtherCampaign            bool    `json:"visit_other_campaign"`
-	VisitorId                     int64   `json:"visitor_id"`
-	PersonId                      int64   `json:"person_id"`
+	VisitorID                     int64   `json:"visitor_id"`
+	PersonID                      int64   `json:"person_id"`
 	VisitorType                   string  `json:"visitor_type"`
-	VisitorSessionId              int64   `json:"visitor_session_id"`
+	VisitorSessionID              int64   `json:"visitor_session_id"`
 	VisitsCount                   int64   `json:"visits_count"`
-	VisitorFirstCampaignId        int64   `json:"visitor_first_campaign_id"`
+	VisitorFirstCampaignID        int64   `json:"visitor_first_campaign_id"`
 	VisitorFirstCampaignName      string  `json:"visitor_first_campaign_name"`
 	VisitorCity                   string  `json:"visitor_city"`
 	VisitorRegion                 string  `json:"visitor_region"`
 	VisitorCountry                string  `json:"visitor_country"`
 	VisitorDevice                 string  `json:"visitor_device"`
-	LastAnsweredEmployeeId        int64   `json:"last_answered_employee_id"`
+	LastAnsweredEmployeeID        int64   `json:"last_answered_employee_id"`
 	LastAnsweredEmployeeFullName  string  `json:"last_answered_employee_full_name"`
 	LastAnsweredEmployeeRating    int64   `json:"last_answered_employee_rating"`
-	FirstAnsweredEmployeeId       int64   `json:"first_answered_employee_id"`
+	FirstAnsweredEmployeeID       int64   `json:"first_answered_employee_id"`
 	FirstAnsweredEmployeeFullName string  `json:"first_answered_employee_full_name"`
-	ScenarioId                    int64   `json:"scenario_id"`
+	ScenarioID                    int64   `json:"scenario_id"`
 	ScenarioName                  string  `json:"scenario_name"`
-	CallApiExternalId             string  `json:"call_api_external_id"`
-	CallApiRequestId              int64   `json:"call_api_request_id"`
+	CallAPIExternalID             string  `json:"call_api_external_id"`
+	CallAPIRequestID              int64   `json:"call_api_request_id"`
 	ContactPhoneNumber            string  `json:"contact_phone_number"`
 	ContactFullName               string  `json:"contact_full_name"`
-	ContactId                     int64   `json:"contact_id"`
+	ContactID                     int64   `json:"contact_id"`
 	UtmSource                     string  `json:"utm_source"`
 	UtmMedium                     string  `json:"utm_medium"`
 	UtmTerm                       string  `json:"utm_term"`
@@ -99,11 +99,11 @@ type CallCSV struct {
 	Direction                     string  `csv:"direction"`
 	Source                        string  `csv:"source"`
 	CommunicationNumber           int64   `csv:"communication_number"`
-	CommunicationPageUrl          string  `csv:"communication_page_url"`
-	CommunicationId               int64   `csv:"communication_id"`
+	CommunicationPageURL          string  `csv:"communication_page_url"`
+	CommunicationID               int64   `csv:"communication_id"`
 	CommunicationType             string  `csv:"communication_type"`
 	IsLost                        bool    `csv:"is_lost"`
-	CpnRegionId                   int64   `csv:"cpn_region_id"`
+	CpnRegionID                   int64   `csv:"cpn_region_id"`
 	CpnRegionName                 string  `csv:"cpn_region_name"`
 	WaitDuration                  int64   `csv:"wait_duration"`
 	TotalWaitDuration             int64   `csv:"total_wait_duration"`
@@ -112,8 +112,8 @@ type CallCSV struct {
 	CleanTalkDuration             int64   `csv:"clean_talk_duration"`
 	TotalDuration                 int64   `csv:"total_duration"`
 	PostprocessDuration           int64   `csv:"postprocess_duration"`
-	UaClientId                    string  `csv:"ua_client_id"`
-	YmClientId                    string  `csv:"ym_client_id"`
+	UaClientID                    string  `csv:"ua_client_id"`
+	YmClientID                    string  `csv:"ym_client_id"`
 	SaleDate                      string  `csv:"sale_date"`
 	SaleCost                      float64 `csv:"sale_cost"`
 	SearchQuery                   string  `csv:"search_query"`
@@ -124,37 +124,37 @@ type CallCSV struct {
 	Gclid                         string  `csv:"gclid"`
 	Yclid                         string  `csv:"yclid"`
 	Ymclid                        string  `csv:"ymclid"`
-	EfId                          string  `csv:"ef_id"`
+	EfID                          string  `csv:"ef_id"`
 	Channel                       string  `csv:"channel"`
-	SiteId                        int64   `csv:"site_id"`
+	SiteID                        int64   `csv:"site_id"`
 	SiteDomainName                string  `csv:"site_domain_name"`
-	CampaignId                    int64   `csv:"campaign_id"`
+	CampaignID                    int64   `csv:"campaign_id"`
 	CampaignName                  string  `csv:"campaign_name"`
 	AutoCallCampaignName          string  `csv:"auto_call_campaign_name"`
 	VisitOtherCampaign            bool    `csv:"visit_other_campaign"`
-	VisitorId                     int64   `csv:"visitor_id"`
-	PersonId                      int64   `csv:"person_id"`
+	VisitorID                     int64   `csv:"visitor_id"`
+	PersonID                      int64   `csv:"person_id"`
 	VisitorType                   string  `csv:"visitor_type"`
-	VisitorSessionId              int64   `csv:"visitor_session_id"`
+	VisitorSessionID              int64   `csv:"visitor_session_id"`
 	VisitsCount                   int64   `csv:"visits_count"`
-	VisitorFirstCampaignId        int64   `csv:"visitor_first_campaign_id"`
+	VisitorFirstCampaignID        int64   `csv:"visitor_first_campaign_id"`
 	VisitorFirstCampaignName      string  `csv:"visitor_first_campaign_name"`
 	VisitorCity                   string  `csv:"visitor_city"`
 	VisitorRegion                 string  `csv:"visitor_region"`
 	VisitorCountry                string  `csv:"visitor_country"`
 	VisitorDevice                 string  `csv:"visitor_device"`
-	LastAnsweredEmployeeId        int64   `csv:"last_answered_employee_id"`
+	LastAnsweredEmployeeID        int64   `csv:"last_answered_employee_id"`
 	LastAnsweredEmployeeFullName  string  `csv:"last_answered_employee_full_name"`
 	LastAnsweredEmployeeRating    int64   `csv:"last_answered_employee_rating"`
-	FirstAnsweredEmployeeId       int64   `csv:"first_answered_employee_id"`
+	FirstAnsweredEmployeeID       int64   `csv:"first_answered_employee_id"`
 	FirstAnsweredEmployeeFullName string  `csv:"first_answered_employee_full_name"`
-	ScenarioId                    int64   `csv:"scenario_id"`
+	ScenarioID                    int64   `csv:"scenario_id"`
 	ScenarioName                  string  `csv:"scenario_name"`
-	CallApiExternalId             string  `csv:"call_api_external_id"`
-	CallApiRequestId              int64   `csv:"call_api_request_id"`
+	CallAPIExternalID             string  `csv:"call_api_external_id"`
+	CallAPIRequestID              int64   `csv:"call_api_request_id"`
 	ContactPhoneNumber            string  `csv:"contact_phone_number"`
 	ContactFullName               string  `csv:"contact_full_name"`
-	ContactId                     int64   `csv:"contact_id"`
+	ContactID                     int64   `csv:"contact_id"`
 	UtmSource                     string  `csv:"utm_source"`
 	UtmMedium                     string  `csv:"utm_medium"`
 	UtmTerm                       string  `csv:"utm_term"`

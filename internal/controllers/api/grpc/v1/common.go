@@ -14,5 +14,6 @@ func pbDateNormalize(s string) (time.Time, error) {
 	if err != nil {
 		return time.Time{}, err
 	}
+
 	return date, nil
 }

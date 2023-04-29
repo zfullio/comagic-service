@@ -12,8 +12,8 @@ type CampaignRepositoryTracking interface {
 }
 
 type CampaignRepositoryBQ interface {
-	SendAny(datasetId string, tableId string, campaigns []entity.Campaign) (err error)
-	SendCampaignsConditions(datasetId string, tableId string, campaigns []entity.Campaign) (err error)
+	SendAny(datasetID string, tableID string, campaigns []entity.Campaign) (err error)
+	SendCampaignsConditions(datasetID string, tableID string, campaigns []entity.Campaign) (err error)
 }
 
 type CampaignService struct {
@@ -24,6 +24,7 @@ type CampaignService struct {
 
 func NewCampaignService(tracking CampaignRepositoryTracking, bq CampaignRepositoryBQ, logger *zerolog.Logger) *CampaignService {
 	serviceLogger := logger.With().Str("service", "campaign").Logger()
+
 	return &CampaignService{
 		tracking: tracking,
 		bq:       bq,
@@ -33,27 +34,33 @@ func NewCampaignService(tracking CampaignRepositoryTracking, bq CampaignReposito
 
 func (s *CampaignService) GetCampaigns(fields []string, filter comagic.Filter) (campaigns []entity.Campaign, err error) {
 	s.logger.Info().Msg("GetCampaigns")
+
 	campaigns, err = s.tracking.GetWithFilter(fields, filter)
 	if err != nil {
 		return campaigns, fmt.Errorf("ошибка получения кампаний: %w", err)
 	}
+
 	return campaigns, err
 }
 
-func (s *CampaignService) SendCampaigns(datasetId string, tableId string, campaigns []entity.Campaign) (err error) {
+func (s *CampaignService) SendCampaigns(datasetID string, tableID string, campaigns []entity.Campaign) (err error) {
 	s.logger.Info().Msg("SendCampaigns")
-	err = s.bq.SendAny(datasetId, tableId, campaigns)
+
+	err = s.bq.SendAny(datasetID, tableID, campaigns)
 	if err != nil {
 		return fmt.Errorf("ошибка отправки данных %w", err)
 	}
+
 	return err
 }
 
-func (s *CampaignService) SendCampaignsConditions(datasetId string, tableId string, campaigns []entity.Campaign) (err error) {
+func (s *CampaignService) SendCampaignsConditions(datasetID string, tableID string, campaigns []entity.Campaign) (err error) {
 	s.logger.Info().Msg("SendCampaignsConditions")
-	err = s.bq.SendCampaignsConditions(datasetId, tableId, campaigns)
+
+	err = s.bq.SendCampaignsConditions(datasetID, tableID, campaigns)
 	if err != nil {
 		return fmt.Errorf("ошибка отправки данных %w", err)
 	}
+
 	return err
 }

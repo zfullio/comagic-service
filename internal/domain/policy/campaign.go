@@ -19,9 +19,11 @@ func (cp CampaignPolicy) GetCampaigns(fields []string, filter cm.Filter, dataset
 	if err != nil {
 		return fmt.Errorf("ошибка получения кампаний: %w", err)
 	}
+
 	if len(campaigns) == 0 {
 		return fmt.Errorf("кампании | пустой список значений")
 	}
+
 	err = cp.service.SendCampaigns(datasetID, tableID, campaigns)
 	if err != nil {
 		return fmt.Errorf("ошибка отправки кампаний в bq: %w", err)
@@ -35,6 +37,7 @@ func (cp CampaignPolicy) GetCondition(fields []string, filter cm.Filter, dataset
 	if err != nil {
 		return fmt.Errorf("ошибка получения кампаний: %w", err)
 	}
+
 	if len(campaigns) == 0 {
 		return fmt.Errorf("кампании | пустой список значений")
 	}
