@@ -24,7 +24,7 @@ func NewClient(host Host, version string, token string) *Client {
 
 type Payload struct {
 	Jsonrpc string      `json:"jsonrpc"`
-	Id      string      `json:"id"`
+	ID      string      `json:"id"`
 	Method  Method      `json:"method"`
 	Params  interface{} `json:"params"`
 }
@@ -32,7 +32,7 @@ type Payload struct {
 func (c *Client) NewPayload(method Method, params interface{}) *Payload {
 	return &Payload{
 		Jsonrpc: c.Version,
-		Id:      generateID(method),
+		ID:      generateID(method),
 		Method:  method,
 		Params:  params,
 	}
@@ -40,7 +40,7 @@ func (c *Client) NewPayload(method Method, params interface{}) *Payload {
 
 type Response struct {
 	Jsonrpc string    `json:"jsonrpc"`
-	Id      string    `json:"id"`
+	ID      string    `json:"id"`
 	Error   RespError `json:"error"`
 }
 type RespError struct {

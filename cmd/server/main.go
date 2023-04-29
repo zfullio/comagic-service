@@ -15,8 +15,11 @@ import (
 
 func main() {
 	var fileConfig = flag.String("f", "config.yml", "configuration file")
+
 	var useEnv = flag.Bool("env", false, "use environment variables")
+
 	var trace = flag.Bool("trace", false, "switch trace logging")
+
 	flag.Parse()
 
 	buildInfo, _ := debug.ReadBuildInfo()
@@ -67,6 +70,7 @@ func main() {
 	a := server.NewApp(cfg, &logger, appNotify)
 
 	ctx := context.Background()
+
 	err = a.Run(ctx)
 	if err != nil {
 		logger.Err(err).Msg("Ошибка выполнения запроса")

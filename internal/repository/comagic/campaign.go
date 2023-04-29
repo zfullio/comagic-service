@@ -70,7 +70,7 @@ func newCampaign(campaign comagic.CampaignInfo, dateUpdate time.Time) *entity.Ca
 		Status:              campaign.Status,
 		CreationTime:        campaign.CreationTime,
 		Description:         campaign.Description,
-		SiteID:              campaign.SiteId,
+		SiteID:              campaign.SiteID,
 		SiteDomainName:      campaign.SiteDomainName,
 		Costs:               campaign.Costs,
 		CostRatio:           campaign.CostRatio,

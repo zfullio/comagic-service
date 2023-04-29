@@ -10,9 +10,14 @@ import (
 	"time"
 )
 
+const limitItems = 10000
+
+var minuteLimit = 5
+
 func (c *Client) GetAccount() (data RespGetAccount, err error) {
 	params := GetAccountParams{AccessToken: c.Token}
 	payload := c.NewPayload(GetAccount, params)
+
 	payloadJSON, err := json.Marshal(payload)
 	if err != nil {
 		return data, fmt.Errorf("ошибка формирования запроса: %w", err)
@@ -24,6 +29,7 @@ func (c *Client) GetAccount() (data RespGetAccount, err error) {
 	}
 
 	req.Header.Add("Content-Type", "application/json")
+
 	resp, err := c.tr.Do(req)
 	if err != nil {
 		return data, err
@@ -44,7 +50,6 @@ func (c *Client) GetAccount() (data RespGetAccount, err error) {
 	}
 
 	return data, err
-
 }
 
 type GetAccountParams struct {
@@ -56,7 +61,7 @@ type RespGetAccount struct {
 	Result struct {
 		Metadata Metadata `json:"metadata"`
 		Data     []struct {
-			AppId    int64  `json:"app_id"`
+			AppID    int64  `json:"app_id"`
 			Name     string `json:"name"`
 			Timezone string `json:"timezone"`
 		} `json:"data"`
@@ -66,11 +71,12 @@ type RespGetAccount struct {
 func (c *Client) GetCampaigns(fields []string, filter Filter) (data RespCampaignsInfo, err error) {
 	params := GetRequestParams{
 		AccessToken: c.Token,
-		Limit:       10000,
+		Limit:       limitItems,
 		Filter:      &filter,
 		Fields:      fields,
 	}
 	payload := c.NewPayload(GetCampaigns, params)
+
 	payloadJSON, err := json.Marshal(payload)
 	if err != nil {
 		return data, fmt.Errorf("ошибка формирования запроса: %w", err)
@@ -82,6 +88,7 @@ func (c *Client) GetCampaigns(fields []string, filter Filter) (data RespCampaign
 	}
 
 	req.Header.Add("Content-Type", "application/json")
+
 	resp, err := c.tr.Do(req)
 	if err != nil {
 		return data, err
@@ -94,7 +101,7 @@ func (c *Client) GetCampaigns(fields []string, filter Filter) (data RespCampaign
 
 	err = json.Unmarshal(responseBody, &data)
 	if err != nil {
-		return data, err
+		return data, fmt.Errorf("json.Unmarshal error: %w", err)
 	}
 
 	if data.Error.Code != 0 {
@@ -102,7 +109,6 @@ func (c *Client) GetCampaigns(fields []string, filter Filter) (data RespCampaign
 	}
 
 	return data, err
-
 }
 
 type Filter struct {
@@ -123,7 +129,7 @@ type SortParams struct {
 
 type GetRequestParams struct {
 	AccessToken string       `json:"access_token"`
-	UserId      int64        `json:"user_id,omitempty"`
+	UserID      int64        `json:"user_id,omitempty"`
 	Offset      int          `json:"offset,omitempty"`
 	Limit       int          `json:"limit,omitempty"`
 	Filter      *Filter      `json:"filter,omitempty"`
@@ -144,7 +150,7 @@ type CampaignInfo struct {
 	Status              string              `json:"status"`
 	CreationTime        string              `json:"creation_time"`
 	Description         string              `json:"description"`
-	SiteId              int64               `json:"site_id"`
+	SiteID              int64               `json:"site_id"`
 	SiteDomainName      string              `json:"site_domain_name"`
 	Costs               float64             `json:"costs"`
 	CostRatio           float64             `json:"cost_ratio"`
@@ -174,12 +180,12 @@ type GroupCondition struct {
 }
 
 type SiteBlock struct {
-	SiteBlockId                int64  `json:"site_block_id"`
+	SiteBlockID                int64  `json:"site_block_id"`
 	SiteBlockName              string `json:"site_block_name"`
 	PhoneNumberType            string `json:"phone_number_type"`
-	PhoneNumberId              int64  `json:"phone_number_id"`
+	PhoneNumberID              int64  `json:"phone_number_id"`
 	PhoneNumber                string `json:"phone_number"`
-	RedirectionPhoneNumberId   int64  `json:"redirection_phone_number_id"`
+	RedirectionPhoneNumberID   int64  `json:"redirection_phone_number_id"`
 	RedirectionPhoneNumber     string `json:"redirection_phone_number"`
 	DynamicCallTrackingEnabled bool   `json:"dynamic_call_tracking_enabled"`
 }
@@ -196,6 +202,7 @@ func (c *Client) GetVirtualNumbers() (data RespVirtualNumbersInfo, err error) {
 		AccessToken: c.Token,
 	}
 	payload := c.NewPayload(GetVirtualNumbers, params)
+
 	payloadJSON, err := json.Marshal(payload)
 	if err != nil {
 		return data, fmt.Errorf("ошибка формирования запроса: %w", err)
@@ -203,10 +210,11 @@ func (c *Client) GetVirtualNumbers() (data RespVirtualNumbersInfo, err error) {
 
 	req, err := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
 	if err != nil {
-		return data, err
+		return data, fmt.Errorf("request error: %w", err)
 	}
 
 	req.Header.Add("Content-Type", "application/json; charset=UTF-8")
+
 	resp, err := c.tr.Do(req)
 	if err != nil {
 		return data, err
@@ -227,7 +235,6 @@ func (c *Client) GetVirtualNumbers() (data RespVirtualNumbersInfo, err error) {
 	}
 
 	return data, err
-
 }
 
 type RespVirtualNumbersInfo struct {
@@ -235,7 +242,7 @@ type RespVirtualNumbersInfo struct {
 	Result struct {
 		Metadata Metadata `json:"metadata"`
 		Data     []struct {
-			Id                     int64  `json:"id"`
+			ID                     int64  `json:"id"`
 			VirtualPhoneNumber     string `json:"virtual_phone_number"`
 			RedirectionPhoneNumber string `json:"redirection_phone_number"`
 			ActivationDate         string `json:"activation_date"`
@@ -243,18 +250,18 @@ type RespVirtualNumbersInfo struct {
 			Category               string `json:"category"`
 			Type                   string `json:"type"`
 			Campaigns              []struct {
-				CampaignId     int64  `json:"campaign_id"`
-				SiteId         int64  `json:"site_id"`
+				CampaignID     int64  `json:"campaign_id"`
+				SiteID         int64  `json:"site_id"`
 				SiteDomainName string `json:"site_domain_name"`
 				CampaignName   string `json:"campaign_name"`
 				SiteBlocks     []struct {
-					SiteBlockId   int64  `json:"site_block_id"`
+					SiteBlockID   int64  `json:"site_block_id"`
 					SiteBlockName string `json:"site_block_name"`
 					IsTracking    bool   `json:"is_tracking"`
 				} `json:"site_blocks"`
 			} `json:"campaigns"`
 			Scenarios []struct {
-				ScenarioId   int64  `json:"scenario_id"`
+				ScenarioID   int64  `json:"scenario_id"`
 				ScenarioName string `json:"scenario_name"`
 			} `json:"scenarios"`
 		} `json:"data"`
@@ -266,33 +273,41 @@ func (c *Client) GetSites() error {
 		AccessToken: c.Token,
 	}
 	payload := c.NewPayload(GetSites, params)
+
 	payloadJSON, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("ошибка формирования запроса: %w", err)
 	}
+
 	req, err := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
 	if err != nil {
-		return err
+		return fmt.Errorf("request error: %w", err)
 	}
+
 	req.Header.Add("Content-Type", "application/json")
+
 	resp, err := c.tr.Do(req)
 	if err != nil {
 		return err
 	}
+
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
+
 	data := RespSitesInfo{}
+
 	err = json.Unmarshal(responseBody, &data)
 	if err != nil {
 		return err
 	}
+
 	if data.Error.Code != 0 {
 		return &data.Error
 	}
-	return nil
 
+	return nil
 }
 
 type RespSitesInfo struct {
@@ -300,16 +315,16 @@ type RespSitesInfo struct {
 	Result struct {
 		Metadata Metadata `json:"metadata"`
 		Data     []struct {
-			Id                 int64  `json:"id"`
+			ID                 int64  `json:"id"`
 			DomainName         string `json:"domain_name"`
 			Name               string `json:"name"`
 			DefaultPhoneNumber string `json:"default_phone_number"`
 			DefaultScenario    struct {
-				ScenarioId   int64  `json:"scenario_id"`
+				ScenarioID   int64  `json:"scenario_id"`
 				ScenarioName string `json:"scenario_name"`
 			} `json:"default_scenario"`
 			SiteKey                          string `json:"site_key"`
-			IndustryId                       int64  `json:"industry_id"`
+			IndustryID                       int64  `json:"industry_id"`
 			IndustryName                     string `json:"industry_name"`
 			TargetCallMinDuration            int64  `json:"target_call_min_duration"`
 			TrackSubdomains                  bool   `json:"track_subdomains"`
@@ -322,16 +337,16 @@ type RespSitesInfo struct {
 			WidgetLink                       struct {
 				Enabled bool   `json:"enabled"`
 				Text    string `json:"text"`
-				Url     string `json:"url"`
+				URL     string `json:"url"`
 			} `json:"widget_link"`
-			ShowVisitorId struct {
+			ShowVisitorID struct {
 				Enabled         bool   `json:"enabled"`
-				ElementIdValue  string `json:"element_id_value"`
+				ElementIDValue  string `json:"element_id_value"`
 				Message         string `json:"message"`
-				LengthVisitorId int64  `json:"length_visitor_id"`
+				LengthVisitorID int64  `json:"length_visitor_id"`
 			} `json:"show_visitor_id"`
 			SiteBlocks []struct {
-				SiteBlockId   int64  `json:"site_block_id"`
+				SiteBlockID   int64  `json:"site_block_id"`
 				SiteBlockName string `json:"site_block_name"`
 			} `json:"site_blocks"`
 			ConnectedIntegrations []interface{} `json:"connected_integrations"`
@@ -347,6 +362,7 @@ func (c *Client) GetCallsReport(dateFrom time.Time, dateTill time.Time, fields [
 	receivedPositions := 0
 	limit := 10000
 	offset := 0
+
 	for true {
 		params := GetCallsRequestParams{
 			GetRequestParams: GetRequestParams{
@@ -359,6 +375,7 @@ func (c *Client) GetCallsReport(dateFrom time.Time, dateTill time.Time, fields [
 			DateTill: dateTill.Format(time.DateTime),
 		}
 		payload := c.NewPayload(GetCallsReport, params)
+
 		payloadJSON, err := json.Marshal(payload)
 		if err != nil {
 			return calls, fmt.Errorf("ошибка формирования запроса: %w", err)
@@ -370,6 +387,7 @@ func (c *Client) GetCallsReport(dateFrom time.Time, dateTill time.Time, fields [
 		}
 
 		req.Header.Add("Content-Type", "application/json")
+
 		resp, err := c.tr.Do(req)
 		if err != nil {
 			return calls, err
@@ -386,6 +404,7 @@ func (c *Client) GetCallsReport(dateFrom time.Time, dateTill time.Time, fields [
 
 		var data = RespCallsReport{}
 		data.Result.Data = make([]CallInfo, 0, limit)
+
 		err = json.Unmarshal(responseBody, &data)
 		if err != nil {
 			return calls, err
@@ -396,6 +415,7 @@ func (c *Client) GetCallsReport(dateFrom time.Time, dateTill time.Time, fields [
 		}
 
 		calls = append(calls, data.Result.Data...)
+
 		receivedPositions = len(calls)
 		if receivedPositions < data.Result.Metadata.TotalItems {
 			ControlLimits(data.Result.Metadata.Limits)
@@ -404,11 +424,12 @@ func (c *Client) GetCallsReport(dateFrom time.Time, dateTill time.Time, fields [
 			break
 		}
 	}
+
 	return calls, err
 }
 
 func ControlLimits(l Limits) {
-	if l.MinuteLimit <= 5 {
+	if l.MinuteLimit <= minuteLimit {
 		log.Printf("Упреждение в минутный лимит. Пауза %v секунд\n", l.MinuteReset)
 		time.Sleep(time.Duration(l.MinuteReset) * time.Second)
 	}
@@ -422,6 +443,7 @@ func (c *Client) GetOfflineMessagesReport(dateFrom time.Time, dateTill time.Time
 	receivedPositions := 0
 	limit := 10000
 	offset := 0
+
 	for true {
 		params := GetCallsRequestParams{
 			GetRequestParams: GetRequestParams{
@@ -434,6 +456,7 @@ func (c *Client) GetOfflineMessagesReport(dateFrom time.Time, dateTill time.Time
 			DateTill: dateTill.Format(time.DateTime),
 		}
 		payload := c.NewPayload(GetOfflineMessagesReport, params)
+
 		payloadJSON, err := json.Marshal(payload)
 		if err != nil {
 			return messages, fmt.Errorf("ошибка формирования запроса: %w", err)
@@ -445,6 +468,7 @@ func (c *Client) GetOfflineMessagesReport(dateFrom time.Time, dateTill time.Time
 		}
 
 		req.Header.Add("Content-Type", "application/json")
+
 		resp, err := c.tr.Do(req)
 		if err != nil {
 			return messages, err
@@ -461,6 +485,7 @@ func (c *Client) GetOfflineMessagesReport(dateFrom time.Time, dateTill time.Time
 
 		var data = RespOfflineMessagesReport{}
 		data.Result.Data = make([]OfflineMessageInfo, 0, limit)
+
 		err = json.Unmarshal(responseBody, &data)
 		if err != nil {
 			return messages, err
@@ -471,6 +496,7 @@ func (c *Client) GetOfflineMessagesReport(dateFrom time.Time, dateTill time.Time
 		}
 
 		messages = append(messages, data.Result.Data...)
+
 		receivedPositions = len(messages)
 		if receivedPositions < data.Result.Metadata.TotalItems {
 			ControlLimits(data.Result.Metadata.Limits)
@@ -479,6 +505,7 @@ func (c *Client) GetOfflineMessagesReport(dateFrom time.Time, dateTill time.Time
 			break
 		}
 	}
+
 	return messages, err
 }
 
@@ -505,7 +532,7 @@ type RespOfflineMessagesReport struct {
 }
 
 type CallInfo struct {
-	Id                            int64            `json:"id"`
+	ID                            int64            `json:"id"`
 	StartTime                     string           `json:"start_time"`
 	FinishTime                    string           `json:"finish_time"`
 	VirtualPhoneNumber            string           `json:"virtual_phone_number"`
@@ -514,11 +541,11 @@ type CallInfo struct {
 	Direction                     string           `json:"direction"`
 	Source                        string           `json:"source"`
 	CommunicationNumber           int64            `json:"communication_number"`
-	CommunicationPageUrl          string           `json:"communication_page_url"`
-	CommunicationId               int64            `json:"communication_id"`
+	CommunicationPageURL          string           `json:"communication_page_url"`
+	CommunicationID               int64            `json:"communication_id"`
 	CommunicationType             string           `json:"communication_type"`
 	IsLost                        bool             `json:"is_lost"`
-	CpnRegionId                   int64            `json:"cpn_region_id"`
+	CpnRegionID                   int64            `json:"cpn_region_id"`
 	CpnRegionName                 string           `json:"cpn_region_name"`
 	WaitDuration                  int64            `json:"wait_duration"`
 	TotalWaitDuration             int64            `json:"total_wait_duration"`
@@ -527,8 +554,8 @@ type CallInfo struct {
 	CleanTalkDuration             int64            `json:"clean_talk_duration"`
 	TotalDuration                 int64            `json:"total_duration"`
 	PostprocessDuration           int64            `json:"postprocess_duration"`
-	UaClientId                    string           `json:"ua_client_id"`
-	YmClientId                    string           `json:"ym_client_id"`
+	UaClientID                    string           `json:"ua_client_id"`
+	YmClientID                    string           `json:"ym_client_id"`
 	SaleDate                      string           `json:"sale_date"`
 	SaleCost                      float64          `json:"sale_cost"`
 	SearchQuery                   string           `json:"search_query"`
@@ -539,37 +566,37 @@ type CallInfo struct {
 	Gclid                         string           `json:"gclid"`
 	Yclid                         string           `json:"yclid"`
 	Ymclid                        string           `json:"ymclid"`
-	EfId                          string           `json:"ef_id"`
+	EfID                          string           `json:"ef_id"`
 	Channel                       string           `json:"channel"`
-	SiteId                        int64            `json:"site_id"`
+	SiteID                        int64            `json:"site_id"`
 	SiteDomainName                string           `json:"site_domain_name"`
-	CampaignId                    int64            `json:"campaign_id"`
+	CampaignID                    int64            `json:"campaign_id"`
 	CampaignName                  string           `json:"campaign_name"`
 	AutoCallCampaignName          string           `json:"auto_call_campaign_name"`
 	VisitOtherCampaign            bool             `json:"visit_other_campaign"`
-	VisitorId                     int64            `json:"visitor_id"`
-	PersonId                      int64            `json:"person_id"`
+	VisitorID                     int64            `json:"visitor_id"`
+	PersonID                      int64            `json:"person_id"`
 	VisitorType                   string           `json:"visitor_type"`
-	VisitorSessionId              int64            `json:"visitor_session_id"`
+	VisitorSessionID              int64            `json:"visitor_session_id"`
 	VisitsCount                   int64            `json:"visits_count"`
-	VisitorFirstCampaignId        int64            `json:"visitor_first_campaign_id"`
+	VisitorFirstCampaignID        int64            `json:"visitor_first_campaign_id"`
 	VisitorFirstCampaignName      string           `json:"visitor_first_campaign_name"`
 	VisitorCity                   string           `json:"visitor_city"`
 	VisitorRegion                 string           `json:"visitor_region"`
 	VisitorCountry                string           `json:"visitor_country"`
 	VisitorDevice                 string           `json:"visitor_device"`
-	LastAnsweredEmployeeId        int64            `json:"last_answered_employee_id"`
+	LastAnsweredEmployeeID        int64            `json:"last_answered_employee_id"`
 	LastAnsweredEmployeeFullName  string           `json:"last_answered_employee_full_name"`
 	LastAnsweredEmployeeRating    int64            `json:"last_answered_employee_rating"`
-	FirstAnsweredEmployeeId       int64            `json:"first_answered_employee_id"`
+	FirstAnsweredEmployeeID       int64            `json:"first_answered_employee_id"`
 	FirstAnsweredEmployeeFullName string           `json:"first_answered_employee_full_name"`
-	ScenarioId                    int64            `json:"scenario_id"`
+	ScenarioID                    int64            `json:"scenario_id"`
 	ScenarioName                  string           `json:"scenario_name"`
-	CallApiExternalId             string           `json:"call_api_external_id"`
-	CallApiRequestId              int64            `json:"call_api_request_id"`
+	CallApiExternalID             string           `json:"call_api_external_id"`
+	CallApiRequestID              int64            `json:"call_api_request_id"`
 	ContactPhoneNumber            string           `json:"contact_phone_number"`
 	ContactFullName               string           `json:"contact_full_name"`
-	ContactId                     int64            `json:"contact_id"`
+	ContactID                     int64            `json:"contact_id"`
 	UtmSource                     string           `json:"utm_source"`
 	UtmMedium                     string           `json:"utm_medium"`
 	UtmTerm                       string           `json:"utm_term"`
@@ -595,17 +622,17 @@ type CallInfo struct {
 	Employees                     []Employee       `json:"employees"`
 	ScenarioOperations            []struct {
 		Name string `json:"name"`
-		Id   int64  `json:"id"`
+		ID   int64  `json:"id"`
 	} `json:"scenario_operations"`
 }
 type Tag struct {
-	TagId               int64  `json:"tag_id"`
+	TagID               int64  `json:"tag_id"`
 	TagName             string `json:"tag_name"`
 	TagType             string `json:"tag_type"`
-	TagUserId           int64  `json:"tag_user_id"`
+	TagUserID           int64  `json:"tag_user_id"`
 	TagUserLogin        string `json:"tag_user_login"`
 	TagChangeTime       string `json:"tag_change_time"`
-	TagEmployeeId       int64  `json:"tag_employee_id"`
+	TagEmployeeID       int64  `json:"tag_employee_id"`
 	TagEmployeeFullName string `json:"tag_employee_full_name"`
 }
 type CustomProperty struct {
@@ -613,25 +640,25 @@ type CustomProperty struct {
 	PropertyValue string `json:"property_value"`
 }
 type Employee struct {
-	EmployeeId       int64  `json:"employee_id"`
+	EmployeeID       int64  `json:"employee_id"`
 	EmployeeFullName string `json:"employee_full_name"`
 	IsAnswered       bool   `json:"is_answered"`
 }
 type Segment struct {
-	SegmentId   int64  `json:"segment_id"`
+	SegmentID   int64  `json:"segment_id"`
 	SegmentName string `json:"segment_name"`
 }
 
 type OfflineMessageInfo struct {
-	Id                       int64            `json:"id"`
+	ID                       int64            `json:"id"`
 	DateTime                 string           `json:"date_time"`
 	Text                     string           `json:"text"`
 	CommunicationNumber      int64            `json:"communication_number"`
-	CommunicationPageUrl     string           `json:"communication_page_url"`
+	CommunicationPageURL     string           `json:"communication_page_url"`
 	CommunicationType        string           `json:"communication_type"`
-	CommunicationId          int64            `json:"communication_id"`
-	UaClientId               string           `json:"ua_client_id"`
-	YmClientId               string           `json:"ym_client_id"`
+	CommunicationID          int64            `json:"communication_id"`
+	UaClientID               string           `json:"ua_client_id"`
+	YmClientID               string           `json:"ym_client_id"`
 	SaleDate                 string           `json:"sale_date"`
 	SaleCost                 float64          `json:"sale_cost"`
 	Status                   string           `json:"status"`
@@ -646,29 +673,29 @@ type OfflineMessageInfo struct {
 	Gclid                    string           `json:"gclid"`
 	Yclid                    string           `json:"yclid"`
 	Ymclid                   string           `json:"ymclid"`
-	EfId                     string           `json:"ef_id"`
+	EfID                     string           `json:"ef_id"`
 	Channel                  string           `json:"channel"`
-	EmployeeId               int64            `json:"employee_id"`
+	EmployeeID               int64            `json:"employee_id"`
 	EmployeeFullName         string           `json:"employee_full_name"`
 	EmployeeAnswerMessage    string           `json:"employee_answer_message"`
 	EmployeeComment          string           `json:"employee_comment"`
 	Tags                     []Tag            `json:"tags"`
-	SiteId                   int64            `json:"site_id"`
+	SiteID                   int64            `json:"site_id"`
 	SiteDomainName           string           `json:"site_domain_name"`
-	GroupId                  int64            `json:"group_id"`
+	GroupID                  int64            `json:"group_id"`
 	GroupName                string           `json:"group_name"`
-	CampaignId               int64            `json:"campaign_id"`
+	CampaignID               int64            `json:"campaign_id"`
 	CampaignName             string           `json:"campaign_name"`
 	VisitOtherCampaign       bool             `json:"visit_other_campaign"`
-	VisitorId                int64            `json:"visitor_id"`
+	VisitorID                int64            `json:"visitor_id"`
 	VisitorName              string           `json:"visitor_name"`
 	VisitorPhoneNumber       string           `json:"visitor_phone_number"`
 	VisitorEmail             string           `json:"visitor_email"`
-	PersonId                 int64            `json:"person_id"`
+	PersonID                 int64            `json:"person_id"`
 	VisitorType              string           `json:"visitor_type"`
-	VisitorSessionId         int64            `json:"visitor_session_id"`
+	VisitorSessionID         int64            `json:"visitor_session_id"`
 	VisitsCount              int64            `json:"visits_count"`
-	VisitorFirstCampaignId   int64            `json:"visitor_first_campaign_id"`
+	VisitorFirstCampaignID   int64            `json:"visitor_first_campaign_id"`
 	VisitorFirstCampaignName string           `json:"visitor_first_campaign_name"`
 	VisitorCity              string           `json:"visitor_city"`
 	VisitorRegion            string           `json:"visitor_region"`
@@ -693,7 +720,7 @@ type OfflineMessageInfo struct {
 	EqUtmReferrer            string           `json:"eq_utm_referrer"`
 	EqUtmExpid               string           `json:"eq_utm_expid"`
 	Attributes               []string         `json:"attributes"`
-	SourceId                 int64            `json:"source_id"`
+	SourceID                 int64            `json:"source_id"`
 	SourceName               string           `json:"source_name"`
 	SourceNew                string           `json:"source_new"`
 	ChannelNew               string           `json:"channel_new"`
