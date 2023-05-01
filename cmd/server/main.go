@@ -58,6 +58,7 @@ func main() {
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Ошибка в сервисе: Telegram")
 	}
+
 	telegramService.AddReceivers(cfg.Chat)
 
 	appNotify := notify.New()
