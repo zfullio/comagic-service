@@ -11,11 +11,13 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"os"
+	"sync"
 	"time"
 )
 
 func main() {
 	var fileConfig = flag.String("f", "schedule_config.yml", "configuration file")
+
 	flag.Parse()
 
 	cfg, err := config.NewScheduleConfig(*fileConfig)
@@ -28,7 +30,12 @@ func main() {
 
 	s := gocron.NewScheduler(time.UTC)
 	s.WaitForScheduleAll()
+
 	location, err := time.LoadLocation("Local")
+	if err != nil {
+		log.Fatalf("Ошибка планировщика %v", err)
+	}
+
 	s.ChangeLocation(location)
 
 	_, err = s.Every(1).Day().At(cfg.Time).Do(scheduleRun, *cfg)
@@ -60,11 +67,25 @@ func scheduleRun(cfg config.ScheduleConfig) {
 
 	ctx := context.Background()
 	now := time.Now()
-	dateFrom := now.AddDate(0, 0, -89).Format("2006-01-02")
+	dateFrom := now.AddDate(0, 0, -60).Format("2006-01-02")
 	dateTill := now.Format("2006-01-02")
 
+	wg := &sync.WaitGroup{}
+	wg.Add(len(cfg.Reports))
+
 	for _, report := range cfg.Reports {
-		log.Printf("Сбор отчета для: %s\n", report.ObjectName)
+		report := report
+		go getReport(ctx, wg, c, &report, dateFrom, dateTill)
+	}
+
+	wg.Wait()
+}
+
+func getReport(ctx context.Context, wg *sync.WaitGroup, c pb.ComagicServiceClient, report *config.Report, dateFrom string, dateTill string) {
+	defer wg.Done()
+	log.Printf("%s // Сбор отчета\n", report.ObjectName)
+
+	if report.CallsTable != "" {
 		callsReq, err := c.PushCallsToBQ(ctx, &pb.PushCallsToBQRequest{
 			ComagicToken: report.ComagicToken,
 			BqConfig: &pb.BqConfig{
@@ -81,10 +102,13 @@ func scheduleRun(cfg config.ScheduleConfig) {
 			DateTill: dateTill,
 		})
 		if err != nil {
-			log.Println(err)
+			log.Println(fmt.Errorf("%s // %w", report.ObjectName, err))
 		}
-		log.Printf("Статус отчета по звонкам: %v ", callsReq.IsOK)
 
+		log.Printf("%s // Статус отчета по звонкам: %v ", report.ObjectName, callsReq.IsOK)
+	}
+
+	if report.OfflineMessageTable != "" {
 		messagesReq, err := c.PushOfflineMessagesToBQ(ctx, &pb.PushOfflineMessagesToBQRequest{
 			ComagicToken: report.ComagicToken,
 			BqConfig: &pb.BqConfig{
@@ -101,16 +125,18 @@ func scheduleRun(cfg config.ScheduleConfig) {
 			DateTill: dateTill,
 		})
 		if err != nil {
-			log.Println(err)
+			log.Println(fmt.Errorf("%s // %w", report.ObjectName, err))
 		}
-		log.Printf("Статус отчета по заявкам: %v ", messagesReq.IsOK)
 
+		log.Printf("%s // Статус отчета по заявкам: %v ", report.ObjectName, messagesReq.IsOK)
 	}
+
 }
 
 func GracefulShutdown() {
 	if err := recover(); err != nil {
 		fmt.Println("Критическая ошибка:", err)
 	}
+
 	os.Exit(0)
 }
