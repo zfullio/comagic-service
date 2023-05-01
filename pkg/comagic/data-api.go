@@ -12,7 +12,7 @@ import (
 
 const limitItems = 10000
 
-var minuteLimit = 5
+const minuteLimit = 5
 
 func (c *Client) GetAccount() (data RespGetAccount, err error) {
 	params := GetAccountParams{AccessToken: c.Token}
@@ -30,7 +30,7 @@ func (c *Client) GetAccount() (data RespGetAccount, err error) {
 
 	req.Header.Add("Content-Type", "application/json")
 
-	resp, err := c.tr.Do(req)
+	resp, err := c.tr.Do(fmt.Errorf("request error: %w", err))
 	if err != nil {
 		return data, err
 	}
@@ -359,11 +359,10 @@ func (c *Client) GetCallsReport(dateFrom time.Time, dateTill time.Time, fields [
 		return calls, fmt.Errorf("дата окончания не может быть раньше даты начала")
 	}
 
-	receivedPositions := 0
 	limit := 10000
 	offset := 0
 
-	for true {
+	for {
 		params := GetCallsRequestParams{
 			GetRequestParams: GetRequestParams{
 				AccessToken: c.Token,
@@ -416,9 +415,9 @@ func (c *Client) GetCallsReport(dateFrom time.Time, dateTill time.Time, fields [
 
 		calls = append(calls, data.Result.Data...)
 
-		receivedPositions = len(calls)
-		if receivedPositions < data.Result.Metadata.TotalItems {
+		if len(calls) < data.Result.Metadata.TotalItems {
 			ControlLimits(data.Result.Metadata.Limits)
+
 			offset += limit
 		} else {
 			break
@@ -440,11 +439,10 @@ func (c *Client) GetOfflineMessagesReport(dateFrom time.Time, dateTill time.Time
 		return messages, fmt.Errorf("дата окончания не может быть раньше даты начала")
 	}
 
-	receivedPositions := 0
 	limit := 10000
 	offset := 0
 
-	for true {
+	for {
 		params := GetCallsRequestParams{
 			GetRequestParams: GetRequestParams{
 				AccessToken: c.Token,
@@ -497,9 +495,9 @@ func (c *Client) GetOfflineMessagesReport(dateFrom time.Time, dateTill time.Time
 
 		messages = append(messages, data.Result.Data...)
 
-		receivedPositions = len(messages)
-		if receivedPositions < data.Result.Metadata.TotalItems {
+		if len(messages) < data.Result.Metadata.TotalItems {
 			ControlLimits(data.Result.Metadata.Limits)
+
 			offset += limit
 		} else {
 			break
@@ -592,8 +590,8 @@ type CallInfo struct {
 	FirstAnsweredEmployeeFullName string           `json:"first_answered_employee_full_name"`
 	ScenarioID                    int64            `json:"scenario_id"`
 	ScenarioName                  string           `json:"scenario_name"`
-	CallApiExternalID             string           `json:"call_api_external_id"`
-	CallApiRequestID              int64            `json:"call_api_request_id"`
+	CallAPIExternalID             string           `json:"call_api_external_id"`
+	CallAPIRequestID              int64            `json:"call_api_request_id"`
 	ContactPhoneNumber            string           `json:"contact_phone_number"`
 	ContactFullName               string           `json:"contact_full_name"`
 	ContactID                     int64            `json:"contact_id"`
