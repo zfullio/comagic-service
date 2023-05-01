@@ -43,6 +43,7 @@ func (cr callRepository) CreateTable(ctx context.Context) (err error) {
 
 	fieldClustering := []string{"campaign_id", "utm_source", "utm_medium"}
 	fieldPartition := "date"
+
 	err = CreateTable(ctx, CallDTO{}, cr.table, &fieldPartition, &fieldClustering)
 	if err != nil {
 		return fmt.Errorf("createTable: %w", err)
@@ -85,11 +86,11 @@ type CallDTO struct {
 	Direction                     bigquery.NullString    `bigquery:"direction"`
 	Source                        bigquery.NullString    `bigquery:"source"`
 	CommunicationNumber           bigquery.NullInt64     `bigquery:"communication_number"`
-	CommunicationPageUrl          bigquery.NullString    `bigquery:"communication_page_url"`
-	CommunicationId               bigquery.NullInt64     `bigquery:"communication_id"`
+	CommunicationPageURL          bigquery.NullString    `bigquery:"communication_page_url"`
+	CommunicationID               bigquery.NullInt64     `bigquery:"communication_id"`
 	CommunicationType             bigquery.NullString    `bigquery:"communication_type"`
 	IsLost                        bigquery.NullBool      `bigquery:"is_lost"`
-	CpnRegionId                   bigquery.NullInt64     `bigquery:"cpn_region_id"`
+	CpnRegionID                   bigquery.NullInt64     `bigquery:"cpn_region_id"`
 	CpnRegionName                 bigquery.NullString    `bigquery:"cpn_region_name"`
 	WaitDuration                  bigquery.NullInt64     `bigquery:"wait_duration"`
 	TotalWaitDuration             bigquery.NullInt64     `bigquery:"total_wait_duration"`
@@ -98,8 +99,8 @@ type CallDTO struct {
 	CleanTalkDuration             bigquery.NullInt64     `bigquery:"clean_talk_duration"`
 	TotalDuration                 bigquery.NullInt64     `bigquery:"total_duration"`
 	PostprocessDuration           bigquery.NullInt64     `bigquery:"postprocess_duration"`
-	UaClientId                    bigquery.NullString    `bigquery:"ua_client_id"`
-	YmClientId                    bigquery.NullString    `bigquery:"ym_client_id"`
+	UaClientID                    bigquery.NullString    `bigquery:"ua_client_id"`
+	YmClientID                    bigquery.NullString    `bigquery:"ym_client_id"`
 	SaleDate                      bigquery.NullString    `bigquery:"sale_date"`
 	SaleCost                      bigquery.NullFloat64   `bigquery:"sale_cost"`
 	SearchQuery                   bigquery.NullString    `bigquery:"search_query"`
@@ -110,37 +111,37 @@ type CallDTO struct {
 	Gclid                         bigquery.NullString    `bigquery:"gclid"`
 	Yclid                         bigquery.NullString    `bigquery:"yclid"`
 	Ymclid                        bigquery.NullString    `bigquery:"ymclid"`
-	EfId                          bigquery.NullString    `bigquery:"ef_id"`
+	EfID                          bigquery.NullString    `bigquery:"ef_id"`
 	Channel                       bigquery.NullString    `bigquery:"channel"`
-	SiteId                        bigquery.NullInt64     `bigquery:"site_id"`
+	SiteID                        bigquery.NullInt64     `bigquery:"site_id"`
 	SiteDomainName                bigquery.NullString    `bigquery:"site_domain_name"`
-	CampaignId                    bigquery.NullInt64     `bigquery:"campaign_id"`
+	CampaignID                    bigquery.NullInt64     `bigquery:"campaign_id"`
 	CampaignName                  bigquery.NullString    `bigquery:"campaign_name"`
 	AutoCallCampaignName          bigquery.NullString    `bigquery:"auto_call_campaign_name"`
 	VisitOtherCampaign            bigquery.NullBool      `bigquery:"visit_other_campaign"`
-	VisitorId                     bigquery.NullInt64     `bigquery:"visitor_id"`
-	PersonId                      bigquery.NullInt64     `bigquery:"person_id"`
+	VisitorID                     bigquery.NullInt64     `bigquery:"visitor_id"`
+	PersonID                      bigquery.NullInt64     `bigquery:"person_id"`
 	VisitorType                   bigquery.NullString    `bigquery:"visitor_type"`
-	VisitorSessionId              bigquery.NullInt64     `bigquery:"visitor_session_id"`
+	VisitorSessionID              bigquery.NullInt64     `bigquery:"visitor_session_id"`
 	VisitsCount                   bigquery.NullInt64     `bigquery:"visits_count"`
-	VisitorFirstCampaignId        bigquery.NullInt64     `bigquery:"visitor_first_campaign_id"`
+	VisitorFirstCampaignID        bigquery.NullInt64     `bigquery:"visitor_first_campaign_id"`
 	VisitorFirstCampaignName      bigquery.NullString    `bigquery:"visitor_first_campaign_name"`
 	VisitorCity                   bigquery.NullString    `bigquery:"visitor_city"`
 	VisitorRegion                 bigquery.NullString    `bigquery:"visitor_region"`
 	VisitorCountry                bigquery.NullString    `bigquery:"visitor_country"`
 	VisitorDevice                 bigquery.NullString    `bigquery:"visitor_device"`
-	LastAnsweredEmployeeId        bigquery.NullString    `bigquery:"last_answered_employee_id"`
+	LastAnsweredEmployeeID        bigquery.NullString    `bigquery:"last_answered_employee_id"`
 	LastAnsweredEmployeeFullName  bigquery.NullString    `bigquery:"last_answered_employee_full_name"`
 	LastAnsweredEmployeeRating    bigquery.NullInt64     `bigquery:"last_answered_employee_rating"`
-	FirstAnsweredEmployeeId       bigquery.NullInt64     `bigquery:"first_answered_employee_id"`
+	FirstAnsweredEmployeeID       bigquery.NullInt64     `bigquery:"first_answered_employee_id"`
 	FirstAnsweredEmployeeFullName bigquery.NullString    `bigquery:"first_answered_employee_full_name"`
-	ScenarioId                    bigquery.NullString    `bigquery:"scenario_id"`
+	ScenarioID                    bigquery.NullString    `bigquery:"scenario_id"`
 	ScenarioName                  bigquery.NullString    `bigquery:"scenario_name"`
-	CallApiExternalId             bigquery.NullString    `bigquery:"call_api_external_id"`
-	CallApiRequestId              bigquery.NullString    `bigquery:"call_api_request_id"`
+	CallAPIExternalID             bigquery.NullString    `bigquery:"call_api_external_id"`
+	CallAPIRequestID              bigquery.NullString    `bigquery:"call_api_request_id"`
 	ContactPhoneNumber            bigquery.NullString    `bigquery:"contact_phone_number"`
 	ContactFullName               bigquery.NullString    `bigquery:"contact_full_name"`
-	ContactId                     bigquery.NullString    `bigquery:"contact_id"`
+	ContactID                     bigquery.NullString    `bigquery:"contact_id"`
 	UtmSource                     bigquery.NullString    `bigquery:"utm_source"`
 	UtmMedium                     bigquery.NullString    `bigquery:"utm_medium"`
 	UtmTerm                       bigquery.NullString    `bigquery:"utm_term"`
