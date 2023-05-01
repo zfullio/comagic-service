@@ -39,12 +39,13 @@ func (a App) Run(ctx context.Context) (err error) {
 	grp.Go(func() error {
 		return a.StartGRPC(a.comagicServer)
 	})
-	return grp.Wait()
 
+	return grp.Wait()
 }
 
 func (a App) StartGRPC(server pb.ComagicServiceServer) (err error) {
-	a.logger.Info().Msg(fmt.Sprintf(" GRPC запущен на %s:%d", a.cfg.GRPC.IP, a.cfg.GRPC.Port))
+	a.logger.Info().Msg(fmt.Sprintf("GRPC запущен на %s:%d", a.cfg.GRPC.IP, a.cfg.GRPC.Port))
+
 	err = a.Notify.Send(context.Background(), "Comagic Service", fmt.Sprintf("gRPC запущен на %v:%v", a.cfg.GRPC.IP, a.cfg.GRPC.Port))
 	if err != nil {
 		a.logger.Fatal().Err(err).Msg("ошибка отправки уведомления")
