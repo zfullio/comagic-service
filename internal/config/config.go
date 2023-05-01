@@ -34,12 +34,12 @@ func NewServerConfig(filePath string, useEnv bool) (*ServerConfig, error) {
 	if useEnv {
 		err := cleanenv.ReadEnv(cfg)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("read ENV error: %w", err)
 		}
 	} else {
 		err := cleanenv.ReadConfig(filePath, cfg)
 		if err != nil {
-			return nil, fmt.Errorf("config error: %w", err)
+			return nil, fmt.Errorf("read config file error: %w", err)
 		}
 	}
 
