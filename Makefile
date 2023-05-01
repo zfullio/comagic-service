@@ -6,3 +6,6 @@ gen_python:
 
 build_server:
 	go build -o ./bin/server_app ./cmd/server/main.go
+
+build_schedule_client:
+	go build -o ./bin/schedule_client ./cmd/schedule/main.go
