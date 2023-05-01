@@ -62,7 +62,7 @@ func (s Server) PushCallsToBQ(ctx context.Context, req *pb.PushCallsToBQRequest)
 		"eq_utm_term", "eq_utm_content", "eq_utm_campaign", "eq_utm_referrer", "eq_utm_expid",
 	}
 	clComagic := comagic.NewClient(comagic.DataAPI, s.cfg.Version, req.ComagicToken)
-	cmCallRepo := cmRepo.NewCallRepository(clComagic, s.logger)
+	cmCallRepo := cmRepo.NewCallRepository(clComagic, &methodLogger)
 
 	bqClient, err := bigquery.NewClient(ctx, req.BqConfig.ProjectID, option.WithCredentialsFile(bqServiceKey))
 	if err != nil {
@@ -80,7 +80,7 @@ func (s Server) PushCallsToBQ(ctx context.Context, req *pb.PushCallsToBQRequest)
 		}
 	}(bqClient)
 
-	bqCallRepo := cmBQ.NewCallRepository(bqClient, req.BqConfig.DatasetID, req.BqConfig.TableID, s.logger)
+	bqCallRepo := cmBQ.NewCallRepository(bqClient, req.BqConfig.DatasetID, req.BqConfig.TableID, &methodLogger)
 
 	csClient, err := storage.NewClient(ctx, option.WithCredentialsFile(csServiceKey))
 	if err != nil {
@@ -98,9 +98,9 @@ func (s Server) PushCallsToBQ(ctx context.Context, req *pb.PushCallsToBQRequest)
 		}
 	}(csClient)
 
-	csCallRepo := cmCS.NewCallRepository(csClient, req.CsConfig.BucketName, s.logger)
+	csCallRepo := cmCS.NewCallRepository(csClient, req.CsConfig.BucketName, &methodLogger)
 
-	srv := service.NewCallService(cmCallRepo, bqCallRepo, csCallRepo, s.logger)
+	srv := service.NewCallService(cmCallRepo, bqCallRepo, csCallRepo, &methodLogger)
 	cmPolicy := policy.NewCallPolicy(*srv)
 
 	methodLogger.Info().Msg(msgMethodStarted)
