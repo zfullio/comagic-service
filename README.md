@@ -15,7 +15,7 @@
 * Получение данных по dataapi Comagic
 * Генерация CSV файла в temp директории
 * Проверка наличия / создание таблицы в BigQuery
-* Сохранение файла в CloudStorage Bucket
+* Сохранение файла в CloudStorage Bucket (Bucket должен быть уже создан)
 * Удаление данных из таблицы BigQuery за период указаннй в настройках сбора
 * Запись данных в таблицу BigQuery из CloudStorage
 
