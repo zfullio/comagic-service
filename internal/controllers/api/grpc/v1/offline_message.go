@@ -122,7 +122,7 @@ func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOffline
 	}
 
 	clComagic := comagic.NewClient(comagic.DataAPI, s.cfg.Version, req.ComagicToken)
-	cmOfflineMessageRepo := cmRepo.NewOfflineMessageRepository(clComagic, s.logger)
+	cmOfflineMessageRepo := cmRepo.NewOfflineMessageRepository(clComagic, &methodLogger)
 
 	bqClient, err := bigquery.NewClient(ctx, req.BqConfig.ProjectID, option.WithCredentialsFile(bqServiceKey))
 	if err != nil {
@@ -158,9 +158,9 @@ func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOffline
 		}
 	}(csClient)
 
-	csOfflineMessageRepo := cmCS.NewOfflineMessageRepository(csClient, req.CsConfig.BucketName, s.logger)
+	csOfflineMessageRepo := cmCS.NewOfflineMessageRepository(csClient, req.CsConfig.BucketName, &methodLogger)
 
-	srv := service.NewOfflineMessageService(cmOfflineMessageRepo, bqOfflineMessageRepo, csOfflineMessageRepo, s.logger)
+	srv := service.NewOfflineMessageService(cmOfflineMessageRepo, bqOfflineMessageRepo, csOfflineMessageRepo, &methodLogger)
 	cmPolicy := policy.NewOfflineMessagePolicy(*srv)
 
 	methodLogger.Info().Msg(msgMethodStarted)
