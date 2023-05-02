@@ -51,10 +51,10 @@ func (s OfflineMessageService) GetByDate(dateFrom time.Time, dateTill time.Time,
 		return messages, err
 	}
 
-	return messages, err
+	return messages, nil
 }
 
-func (s OfflineMessageService) SendAll(ctx context.Context, dateFrom time.Time, dateTill time.Time, bucketName string, messages []entity.OfflineMessage) (err error) {
+func (s OfflineMessageService) SendAll(ctx context.Context, dateFrom time.Time, dateTill time.Time, bucketName string, messages []entity.OfflineMessage) error {
 	s.logger.Trace().Msg("SendAll")
 
 	dataForSend := make([]entity.OfflineMessageCSV, 0, len(messages))
@@ -88,7 +88,7 @@ func (s OfflineMessageService) SendAll(ctx context.Context, dateFrom time.Time, 
 		return fmt.Errorf("ошибка добавления в bq из storage: %w", err)
 	}
 
-	return err
+	return nil
 }
 
 func NewOfflineMessageCSV(message entity.OfflineMessage) *entity.OfflineMessageCSV {
@@ -171,7 +171,7 @@ func NewOfflineMessageCSV(message entity.OfflineMessage) *entity.OfflineMessageC
 	}
 }
 
-func (s OfflineMessageService) PushOfflineMessagesToBQ(dateFrom time.Time, dateTill time.Time, fields []string, bucketName string) (err error) {
+func (s OfflineMessageService) PushOfflineMessagesToBQ(ctx context.Context, dateFrom time.Time, dateTill time.Time, fields []string, bucketName string) error {
 	s.logger.Trace().Msg("PushOfflineMessagesToBQ")
 
 	messages, err := s.GetByDate(dateFrom, dateTill, fields)
@@ -182,8 +182,6 @@ func (s OfflineMessageService) PushOfflineMessagesToBQ(dateFrom time.Time, dateT
 	if len(messages) == 0 {
 		return fmt.Errorf("offline messages| пустой список значений")
 	}
-
-	ctx := context.Background()
 
 	err = s.bq.TableExists(ctx)
 	if err != nil {

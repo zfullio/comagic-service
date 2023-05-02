@@ -30,7 +30,7 @@ func (c *Client) GetAccount() (data RespGetAccount, err error) {
 
 	req.Header.Add("Content-Type", "application/json")
 
-	resp, err := c.tr.Do(fmt.Errorf("request error: %w", err))
+	resp, err := c.tr.Do(req)
 	if err != nil {
 		return data, err
 	}

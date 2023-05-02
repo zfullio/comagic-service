@@ -51,10 +51,10 @@ func (s CallService) GetByDate(dateFrom time.Time, dateTill time.Time, fields []
 		return calls, err
 	}
 
-	return calls, err
+	return calls, nil
 }
 
-func (s CallService) SendAll(ctx context.Context, dateFrom time.Time, dateTill time.Time, bucketName string, calls []entity.Call) (err error) {
+func (s CallService) SendAll(ctx context.Context, dateFrom time.Time, dateTill time.Time, bucketName string, calls []entity.Call) error {
 	s.logger.Trace().Msg("SendAll")
 
 	dataForSend := make([]entity.CallCSV, 0, len(calls))
@@ -180,7 +180,7 @@ func NewCallCSV(call entity.Call) *entity.CallCSV {
 	}
 }
 
-func (s CallService) PushCallsToBQ(dateFrom time.Time, dateTill time.Time, fields []string, bucketName string) (err error) {
+func (s CallService) PushCallsToBQ(ctx context.Context, dateFrom time.Time, dateTill time.Time, fields []string, bucketName string) error {
 	s.logger.Trace().Msg("PushCallsToBQ")
 
 	calls, err := s.GetByDate(dateFrom, dateTill, fields)
@@ -191,8 +191,6 @@ func (s CallService) PushCallsToBQ(dateFrom time.Time, dateTill time.Time, field
 	if len(calls) == 0 {
 		return fmt.Errorf("звонки | пустой список значений")
 	}
-
-	ctx := context.Background()
 
 	err = s.bq.TableExists(ctx)
 	if err != nil {
@@ -207,5 +205,5 @@ func (s CallService) PushCallsToBQ(dateFrom time.Time, dateTill time.Time, field
 		return fmt.Errorf("ошибка отправки звонков: %w", err)
 	}
 
-	return err
+	return nil
 }

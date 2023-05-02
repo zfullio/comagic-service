@@ -31,7 +31,7 @@ func (s Server) PushCallsToBQ(ctx context.Context, req *pb.PushCallsToBQRequest)
 
 		return &pb.PushCallsToBQResponse{
 			IsOK: false,
-		}, fmt.Errorf("wrong value in field 'dateFrom' : %s", err)
+		}, fmt.Errorf("wrong value in field 'dateFrom' : %w", err)
 	}
 
 	dateTill, err := pbDateNormalize(req.DateTill)
@@ -40,7 +40,7 @@ func (s Server) PushCallsToBQ(ctx context.Context, req *pb.PushCallsToBQRequest)
 
 		return &pb.PushCallsToBQResponse{
 			IsOK: false,
-		}, fmt.Errorf("wrong value in field 'dateTill' : %s", err)
+		}, fmt.Errorf("wrong value in field 'dateTill' : %w", err)
 	}
 
 	fields := []string{"id", "start_time", "finish_time", "finish_reason", "direction", "cpn_region_id",
@@ -105,7 +105,7 @@ func (s Server) PushCallsToBQ(ctx context.Context, req *pb.PushCallsToBQRequest)
 
 	methodLogger.Info().Msg(msgMethodStarted)
 
-	err = cmPolicy.PushCallsToBQ(dateFrom, dateTill.AddDate(0, 0, 1), fields, req.CsConfig.BucketName)
+	err = cmPolicy.PushCallsToBQ(ctx, dateFrom, dateTill.AddDate(0, 0, 1), fields, req.CsConfig.BucketName)
 	if err != nil {
 		methodLogger.Error().Err(err).Msg(msgErrMethod)
 

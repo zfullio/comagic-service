@@ -37,7 +37,7 @@ func (or offlineMessageRepository) GetByDate(dateFrom time.Time, dateTill time.T
 		messages = append(messages, *item)
 	}
 
-	return messages, err
+	return messages, nil
 }
 
 func newOfflineMessage(message cm.OfflineMessageInfo, dateUpdate time.Time) *entity.OfflineMessage {

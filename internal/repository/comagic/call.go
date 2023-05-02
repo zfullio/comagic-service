@@ -37,7 +37,7 @@ func (cr callRepository) GetByDate(dateFrom time.Time, dateTill time.Time, field
 		calls = append(calls, *item)
 	}
 
-	return calls, err
+	return calls, nil
 }
 
 func newCall(call cm.CallInfo, dateUpdate time.Time) *entity.Call {

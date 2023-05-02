@@ -25,10 +25,10 @@ func NewOfflineMessageRepository(client *storage.Client, bucketName string, logg
 	}
 }
 
-func (or offlineMessageRepository) SendFile(ctx context.Context, filename string) (err error) {
+func (or offlineMessageRepository) SendFile(ctx context.Context, filename string) error {
 	or.logger.Trace().Msgf("SendFile: %v", filename)
 
-	err = SendFile(ctx, or.Bucket, filename)
+	err := SendFile(ctx, or.Bucket, filename)
 	if err != nil {
 		return fmt.Errorf("SendFile: %w", err)
 	}

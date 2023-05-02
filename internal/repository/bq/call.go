@@ -27,10 +27,10 @@ func NewCallRepository(client *bigquery.Client, datasetID string, tableID string
 	}
 }
 
-func (cr callRepository) TableExists(ctx context.Context) (err error) {
+func (cr callRepository) TableExists(ctx context.Context) error {
 	cr.logger.Trace().Msg("TableExists")
 
-	err = TableExists(ctx, cr.table)
+	err := TableExists(ctx, cr.table)
 	if err != nil {
 		return err
 	}
@@ -38,13 +38,13 @@ func (cr callRepository) TableExists(ctx context.Context) (err error) {
 	return nil
 }
 
-func (cr callRepository) CreateTable(ctx context.Context) (err error) {
+func (cr callRepository) CreateTable(ctx context.Context) error {
 	cr.logger.Trace().Msg("createTable")
 
 	fieldClustering := []string{"campaign_id", "utm_source", "utm_medium"}
 	fieldPartition := "date"
 
-	err = CreateTable(ctx, CallDTO{}, cr.table, &fieldPartition, &fieldClustering)
+	err := CreateTable(ctx, CallDTO{}, cr.table, &fieldPartition, &fieldClustering)
 	if err != nil {
 		return fmt.Errorf("createTable: %w", err)
 	}
@@ -52,12 +52,12 @@ func (cr callRepository) CreateTable(ctx context.Context) (err error) {
 	return nil
 }
 
-func (cr callRepository) DeleteByDateColumn(ctx context.Context, dateStart time.Time, dateFinish time.Time) (err error) {
+func (cr callRepository) DeleteByDateColumn(ctx context.Context, dateStart time.Time, dateFinish time.Time) error {
 	cr.logger.Trace().Msg("deleteByDateColumn")
 
 	dateColumn := "date"
 
-	err = DeleteByDateColumn(ctx, cr.db, cr.table, dateColumn, dateStart, dateFinish)
+	err := DeleteByDateColumn(ctx, cr.db, cr.table, dateColumn, dateStart, dateFinish)
 	if err != nil {
 		return fmt.Errorf("DeleteByDateColumn: %w", err)
 	}
@@ -65,10 +65,10 @@ func (cr callRepository) DeleteByDateColumn(ctx context.Context, dateStart time.
 	return err
 }
 
-func (cr callRepository) SendFromCS(ctx context.Context, bucket string, object string) (err error) {
+func (cr callRepository) SendFromCS(ctx context.Context, bucket string, object string) error {
 	cr.logger.Trace().Msg("sendFromCS")
 
-	err = SendFromCS(ctx, CallDTO{}, cr.table, bucket, object)
+	err := SendFromCS(ctx, CallDTO{}, cr.table, bucket, object)
 	if err != nil {
 		return fmt.Errorf("SendFromCS: %w", err)
 	}

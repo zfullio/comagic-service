@@ -27,18 +27,22 @@ func NewCampaignRepository(client *bigquery.Client, datasetID string, tableID st
 	}
 }
 
-func (cr campaignRepository) SendAny(datasetId string, tableId string, campaigns []entity.Campaign) (err error) {
+func (cr campaignRepository) SendAny(datasetID string, tableID string, campaigns []entity.Campaign) error {
 	campaignsDTO := make([]campaignDTO, 0, len(campaigns))
+
 	for i := 0; i < len(campaigns); i++ {
 		item := newCampaignDTO(campaigns[i])
 		campaignsDTO = append(campaignsDTO, *item)
 	}
-	myDataset := cr.db.Dataset(datasetId)
-	table := myDataset.Table(tableId)
+
+	myDataset := cr.db.Dataset(datasetID)
+	table := myDataset.Table(tableID)
+
 	u := table.Inserter()
 	if err := u.Put(context.Background(), campaignsDTO); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -49,6 +53,7 @@ func newCampaignDTO(campaign entity.Campaign) *campaignDTO {
 		CountVisits:         campaign.DynamicCallTracking.CountVisits,
 		CoverageVisitors:    campaign.DynamicCallTracking.CoverageVisitors,
 	}
+
 	return &campaignDTO{
 		ID:                  campaign.ID,
 		Status:              campaign.Status,
@@ -87,20 +92,24 @@ type DynamicCallTrackingDTO struct {
 	CoverageVisitors    float64 `bigquery:"coverage_visitors"`
 }
 
-func (cr campaignRepository) SendCampaignsConditions(datasetId string, tableId string, campaigns []entity.Campaign) (err error) {
+func (cr campaignRepository) SendCampaignsConditions(datasetID string, tableID string, campaigns []entity.Campaign) error {
 	conditions := make([]CampaignConditionDTO, 0)
+
 	for i := 0; i < len(campaigns); i++ {
 		for j := 0; j < len(campaigns[i].CampaignConditions); j++ {
 			item := newCampaignConditionDTO(campaigns[i].CampaignConditions[j])
 			conditions = append(conditions, *item)
 		}
 	}
-	myDataset := cr.db.Dataset(datasetId)
-	table := myDataset.Table(tableId)
+
+	myDataset := cr.db.Dataset(datasetID)
+	table := myDataset.Table(tableID)
 	u := table.Inserter()
+
 	if err := u.Put(context.Background(), conditions); err != nil {
 		return err
 	}
+
 	return nil
 }
 

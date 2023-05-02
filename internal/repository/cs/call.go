@@ -25,10 +25,10 @@ func NewCallRepository(client *storage.Client, bucketName string, logger *zerolo
 	}
 }
 
-func (cr callRepository) SendFile(ctx context.Context, filename string) (err error) {
+func (cr callRepository) SendFile(ctx context.Context, filename string) error {
 	cr.logger.Trace().Msgf("SendFile: %v", filename)
 
-	err = SendFile(ctx, cr.Bucket, filename)
+	err := SendFile(ctx, cr.Bucket, filename)
 	if err != nil {
 		return fmt.Errorf("SendFile: %w", err)
 	}

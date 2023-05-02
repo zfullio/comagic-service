@@ -130,7 +130,6 @@ func getReport(ctx context.Context, wg *sync.WaitGroup, c pb.ComagicServiceClien
 
 		log.Printf("%s // Статус отчета по заявкам: %v ", report.ObjectName, messagesReq.IsOK)
 	}
-
 }
 
 func GracefulShutdown() {

@@ -44,8 +44,7 @@ func CreateTable(ctx context.Context, schemaDTO any, table *bigquery.Table, fiel
 	return nil
 }
 
-func DeleteByDateColumn(ctx context.Context, bqClient *bigquery.Client, table *bigquery.Table, dateColumn string, dateStart time.Time, dateFinish time.Time) (err error) {
-
+func DeleteByDateColumn(ctx context.Context, bqClient *bigquery.Client, table *bigquery.Table, dateColumn string, dateStart time.Time, dateFinish time.Time) error {
 	q := bqClient.Query(fmt.Sprintf("DELETE %s.%s ", table.DatasetID, table.TableID) + fmt.Sprintf("WHERE %s >= '%s' AND %s <= '%s'", dateColumn, dateStart.Format(time.DateOnly),
 		dateColumn, dateFinish.Format(time.DateOnly)))
 
@@ -63,10 +62,10 @@ func DeleteByDateColumn(ctx context.Context, bqClient *bigquery.Client, table *b
 		return err
 	}
 
-	return err
+	return nil
 }
 
-func SendFromCS(ctx context.Context, schemaDTO any, table *bigquery.Table, bucket string, object string) (err error) {
+func SendFromCS(ctx context.Context, schemaDTO any, table *bigquery.Table, bucket string, object string) error {
 	schema, err := bigquery.InferSchema(schemaDTO)
 	if err != nil {
 		return fmt.Errorf("bigquery.InferSchema: %w", err)
@@ -99,6 +98,7 @@ func SendFromCS(ctx context.Context, schemaDTO any, table *bigquery.Table, bucke
 	if err := status.Err(); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -110,5 +110,6 @@ func TableExists(ctx context.Context, table *bigquery.Table) error {
 			}
 		}
 	}
+
 	return nil
 }

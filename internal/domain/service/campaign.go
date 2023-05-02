@@ -3,6 +3,7 @@ package service
 import (
 	"Comagic/internal/domain/entity"
 	"Comagic/pkg/comagic"
+	"context"
 	"fmt"
 	"github.com/rs/zerolog"
 )
@@ -12,8 +13,8 @@ type CampaignRepositoryTracking interface {
 }
 
 type CampaignRepositoryBQ interface {
-	SendAny(datasetID string, tableID string, campaigns []entity.Campaign) (err error)
-	SendCampaignsConditions(datasetID string, tableID string, campaigns []entity.Campaign) (err error)
+	SendAny(ctx context.Context, datasetID string, tableID string, campaigns []entity.Campaign) (err error)
+	SendCampaignsConditions(ctx context.Context, datasetID string, tableID string, campaigns []entity.Campaign) (err error)
 }
 
 type CampaignService struct {
@@ -40,27 +41,27 @@ func (s *CampaignService) GetCampaigns(fields []string, filter comagic.Filter) (
 		return campaigns, fmt.Errorf("ошибка получения кампаний: %w", err)
 	}
 
-	return campaigns, err
+	return campaigns, nil
 }
 
-func (s *CampaignService) SendCampaigns(datasetID string, tableID string, campaigns []entity.Campaign) (err error) {
+func (s *CampaignService) SendCampaigns(ctx context.Context, datasetID string, tableID string, campaigns []entity.Campaign) error {
 	s.logger.Info().Msg("SendCampaigns")
 
-	err = s.bq.SendAny(datasetID, tableID, campaigns)
+	err := s.bq.SendAny(ctx, datasetID, tableID, campaigns)
 	if err != nil {
 		return fmt.Errorf("ошибка отправки данных %w", err)
 	}
 
-	return err
+	return nil
 }
 
-func (s *CampaignService) SendCampaignsConditions(datasetID string, tableID string, campaigns []entity.Campaign) (err error) {
+func (s *CampaignService) SendCampaignsConditions(ctx context.Context, datasetID string, tableID string, campaigns []entity.Campaign) error {
 	s.logger.Info().Msg("SendCampaignsConditions")
 
-	err = s.bq.SendCampaignsConditions(datasetID, tableID, campaigns)
+	err := s.bq.SendCampaignsConditions(ctx, datasetID, tableID, campaigns)
 	if err != nil {
 		return fmt.Errorf("ошибка отправки данных %w", err)
 	}
 
-	return err
+	return nil
 }

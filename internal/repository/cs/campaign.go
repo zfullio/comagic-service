@@ -23,12 +23,12 @@ func NewCampaignRepository(client storage.Client, bucketName string, logger *zer
 	}
 }
 
-func (pr campaignRepository) SendFile(ctx context.Context, filename string) (err error) {
+func (pr campaignRepository) SendFile(ctx context.Context, filename string) error {
 	pr.logger.Trace().Msgf("SendFile: %v", filename)
 
 	bucket := pr.db.Bucket(pr.BucketName)
 
-	err = SendFile(ctx, bucket, filename)
+	err := SendFile(ctx, bucket, filename)
 	if err != nil {
 		return fmt.Errorf("SendFile: %w", err)
 	}

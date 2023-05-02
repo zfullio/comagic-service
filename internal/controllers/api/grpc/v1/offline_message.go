@@ -31,7 +31,7 @@ func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOffline
 
 		return &pb.PushOfflineMessagesToBQResponse{
 			IsOK: false,
-		}, fmt.Errorf("wrong value in field 'dateFrom' : %s", err)
+		}, fmt.Errorf("wrong value in field 'dateFrom' : %w", err)
 	}
 
 	dateTill, err := pbDateNormalize(req.DateTill)
@@ -40,7 +40,7 @@ func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOffline
 
 		return &pb.PushOfflineMessagesToBQResponse{
 			IsOK: false,
-		}, fmt.Errorf("wrong value in field 'dateTill' : %s", err)
+		}, fmt.Errorf("wrong value in field 'dateTill' : %w", err)
 	}
 
 	fields := []string{
@@ -165,7 +165,7 @@ func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOffline
 
 	methodLogger.Info().Msg(msgMethodStarted)
 
-	err = cmPolicy.PushOfflineMessageToBQ(dateFrom, dateTill.AddDate(0, 0, 1), fields, req.CsConfig.BucketName)
+	err = cmPolicy.PushOfflineMessageToBQ(ctx, dateFrom, dateTill.AddDate(0, 0, 1), fields, req.CsConfig.BucketName)
 	if err != nil {
 		s.logger.Err(err).Msg("ошибка выполнения")
 

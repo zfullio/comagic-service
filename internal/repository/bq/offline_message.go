@@ -27,10 +27,10 @@ func NewOfflineMessageRepository(client *bigquery.Client, datasetID string, tabl
 	}
 }
 
-func (or offlineMessageRepository) TableExists(ctx context.Context) (err error) {
+func (or offlineMessageRepository) TableExists(ctx context.Context) error {
 	or.logger.Trace().Msg("TableExists")
 
-	err = TableExists(ctx, or.table)
+	err := TableExists(ctx, or.table)
 	if err != nil {
 		return err
 	}
@@ -38,12 +38,13 @@ func (or offlineMessageRepository) TableExists(ctx context.Context) (err error) 
 	return nil
 }
 
-func (or offlineMessageRepository) CreateTable(ctx context.Context) (err error) {
+func (or offlineMessageRepository) CreateTable(ctx context.Context) error {
 	or.logger.Trace().Msg("createTable")
 
 	fieldClustering := []string{"campaign_id", "utm_source", "utm_medium"}
 	fieldPartition := "date"
-	err = CreateTable(ctx, OfflineMessageDTO{}, or.table, &fieldPartition, &fieldClustering)
+
+	err := CreateTable(ctx, OfflineMessageDTO{}, or.table, &fieldPartition, &fieldClustering)
 	if err != nil {
 		return fmt.Errorf("createTable: %w", err)
 	}
@@ -51,23 +52,23 @@ func (or offlineMessageRepository) CreateTable(ctx context.Context) (err error) 
 	return nil
 }
 
-func (or offlineMessageRepository) DeleteByDateColumn(ctx context.Context, dateStart time.Time, dateFinish time.Time) (err error) {
+func (or offlineMessageRepository) DeleteByDateColumn(ctx context.Context, dateStart time.Time, dateFinish time.Time) error {
 	or.logger.Trace().Msg("deleteByDateColumn")
 
 	dateColumn := "date"
 
-	err = DeleteByDateColumn(ctx, or.db, or.table, dateColumn, dateStart, dateFinish)
+	err := DeleteByDateColumn(ctx, or.db, or.table, dateColumn, dateStart, dateFinish)
 	if err != nil {
 		return fmt.Errorf("DeleteByDateColumn: %w", err)
 	}
 
-	return err
+	return nil
 }
 
-func (or offlineMessageRepository) SendFromCS(ctx context.Context, bucket string, object string) (err error) {
+func (or offlineMessageRepository) SendFromCS(ctx context.Context, bucket string, object string) error {
 	or.logger.Trace().Msg("sendFromCS")
 
-	err = SendFromCS(ctx, OfflineMessageDTO{}, or.table, bucket, object)
+	err := SendFromCS(ctx, OfflineMessageDTO{}, or.table, bucket, object)
 	if err != nil {
 		return fmt.Errorf("SendFromCS: %w", err)
 	}
@@ -76,16 +77,16 @@ func (or offlineMessageRepository) SendFromCS(ctx context.Context, bucket string
 }
 
 type OfflineMessageDTO struct {
-	Id                       bigquery.NullInt64     `bigquery:"id"`
+	ID                       bigquery.NullInt64     `bigquery:"id"`
 	Date                     bigquery.NullDate      `bigquery:"date"`
 	DateTime                 bigquery.NullDateTime  `bigquery:"date_time"`
 	Text                     bigquery.NullString    `bigquery:"text"`
 	CommunicationNumber      bigquery.NullInt64     `bigquery:"communication_number"`
-	CommunicationPageUrl     bigquery.NullString    `bigquery:"communication_page_url"`
+	CommunicationPageURL     bigquery.NullString    `bigquery:"communication_page_url"`
 	CommunicationType        bigquery.NullString    `bigquery:"communication_type"`
-	CommunicationId          bigquery.NullInt64     `bigquery:"communication_id"`
-	UaClientId               bigquery.NullString    `bigquery:"ua_client_id"`
-	YmClientId               bigquery.NullString    `bigquery:"ym_client_id"`
+	CommunicationID          bigquery.NullInt64     `bigquery:"communication_id"`
+	UaClientID               bigquery.NullString    `bigquery:"ua_client_id"`
+	YmClientID               bigquery.NullString    `bigquery:"ym_client_id"`
 	SaleDate                 bigquery.NullString    `bigquery:"sale_date"`
 	SaleCost                 bigquery.NullFloat64   `bigquery:"sale_cost"`
 	Status                   bigquery.NullString    `bigquery:"status"`
@@ -100,29 +101,29 @@ type OfflineMessageDTO struct {
 	Gclid                    bigquery.NullString    `bigquery:"gclid"`
 	Yclid                    bigquery.NullString    `bigquery:"yclid"`
 	Ymclid                   bigquery.NullString    `bigquery:"ymclid"`
-	EfId                     bigquery.NullString    `bigquery:"ef_id"`
+	EfID                     bigquery.NullString    `bigquery:"ef_id"`
 	Channel                  bigquery.NullString    `bigquery:"channel"`
-	EmployeeId               bigquery.NullInt64     `bigquery:"employee_id"`
+	EmployeeID               bigquery.NullInt64     `bigquery:"employee_id"`
 	EmployeeFullName         bigquery.NullString    `bigquery:"employee_full_name"`
 	EmployeeAnswerMessage    bigquery.NullString    `bigquery:"employee_answer_message"`
 	EmployeeComment          bigquery.NullString    `bigquery:"employee_comment"`
 	Tags                     bigquery.NullString    `bigquery:"tags"`
-	SiteId                   bigquery.NullInt64     `bigquery:"site_id"`
+	SiteID                   bigquery.NullInt64     `bigquery:"site_id"`
 	SiteDomainName           bigquery.NullString    `bigquery:"site_domain_name"`
-	GroupId                  bigquery.NullInt64     `bigquery:"group_id"`
+	GroupID                  bigquery.NullInt64     `bigquery:"group_id"`
 	GroupName                bigquery.NullString    `bigquery:"group_name"`
-	CampaignId               bigquery.NullInt64     `bigquery:"campaign_id"`
+	CampaignID               bigquery.NullInt64     `bigquery:"campaign_id"`
 	CampaignName             bigquery.NullString    `bigquery:"campaign_name"`
 	VisitOtherCampaign       bigquery.NullBool      `bigquery:"visit_other_campaign"`
-	VisitorId                bigquery.NullInt64     `bigquery:"visitor_id"`
+	VisitorID                bigquery.NullInt64     `bigquery:"visitor_id"`
 	VisitorName              bigquery.NullString    `bigquery:"visitor_name"`
 	VisitorPhoneNumber       bigquery.NullString    `bigquery:"visitor_phone_number"`
 	VisitorEmail             bigquery.NullString    `bigquery:"visitor_email"`
-	PersonId                 bigquery.NullInt64     `bigquery:"person_id"`
+	PersonID                 bigquery.NullInt64     `bigquery:"person_id"`
 	VisitorType              bigquery.NullString    `bigquery:"visitor_type"`
-	VisitorSessionId         bigquery.NullInt64     `bigquery:"visitor_session_id"`
+	VisitorSessionID         bigquery.NullInt64     `bigquery:"visitor_session_id"`
 	VisitsCount              bigquery.NullInt64     `bigquery:"visits_count"`
-	VisitorFirstCampaignId   bigquery.NullInt64     `bigquery:"visitor_first_campaign_id"`
+	VisitorFirstCampaignID   bigquery.NullInt64     `bigquery:"visitor_first_campaign_id"`
 	VisitorFirstCampaignName bigquery.NullString    `bigquery:"visitor_first_campaign_name"`
 	VisitorCity              bigquery.NullString    `bigquery:"visitor_city"`
 	VisitorRegion            bigquery.NullString    `bigquery:"visitor_region"`
@@ -145,7 +146,7 @@ type OfflineMessageDTO struct {
 	EqUtmReferrer            bigquery.NullString    `bigquery:"eq_utm_referrer"`
 	EqUtmExpid               bigquery.NullString    `bigquery:"eq_utm_expid"`
 	Attributes               bigquery.NullString    `bigquery:"attributes"`
-	SourceId                 bigquery.NullInt64     `bigquery:"source_id"`
+	SourceID                 bigquery.NullInt64     `bigquery:"source_id"`
 	SourceName               bigquery.NullString    `bigquery:"source_name"`
 	SourceNew                bigquery.NullString    `bigquery:"source_new"`
 	ChannelNew               bigquery.NullString    `bigquery:"channel_new"`
