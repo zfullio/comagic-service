@@ -10,7 +10,6 @@ import (
 	"github.com/rs/zerolog"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
-	"log"
 	"net"
 )
 
@@ -43,24 +42,24 @@ func (a App) Run(ctx context.Context) (err error) {
 	return grp.Wait()
 }
 
-func (a App) StartGRPC(server pb.ComagicServiceServer) (err error) {
+func (a App) StartGRPC(server pb.ComagicServiceServer) error {
 	a.logger.Info().Msg(fmt.Sprintf("GRPC запущен на %s:%d", a.cfg.GRPC.IP, a.cfg.GRPC.Port))
 
-	err = a.Notify.Send(context.Background(), "Comagic Service", fmt.Sprintf("gRPC запущен на %v:%v", a.cfg.GRPC.IP, a.cfg.GRPC.Port))
+	err := a.Notify.Send(context.Background(), "Comagic Service", fmt.Sprintf("gRPC запущен на %v:%v", a.cfg.GRPC.IP, a.cfg.GRPC.Port))
 	if err != nil {
 		a.logger.Fatal().Err(err).Msg("ошибка отправки уведомления")
 	}
 
 	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", a.cfg.GRPC.IP, a.cfg.GRPC.Port))
 	if err != nil {
-		log.Fatal("failed to create listener")
+		a.logger.Fatal().Err(err).Msg("failed to create listener")
 	}
 
 	a.grpcServer = grpc.NewServer()
 	pb.RegisterComagicServiceServer(a.grpcServer, server)
 
 	if err := a.grpcServer.Serve(lis); err != nil {
-		log.Fatal(err)
+		a.logger.Fatal().Err(err).Msg("failed to serve")
 	}
 
 	return nil
