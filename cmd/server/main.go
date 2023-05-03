@@ -74,6 +74,6 @@ func main() {
 
 	err = a.Run(ctx)
 	if err != nil {
-		logger.Err(err).Msg("Ошибка выполнения запроса")
+		logger.Fatal().Err(err).Msg("ошибка приложения")
 	}
 }

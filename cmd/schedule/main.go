@@ -103,9 +103,9 @@ func getReport(ctx context.Context, wg *sync.WaitGroup, c pb.ComagicServiceClien
 		})
 		if err != nil {
 			log.Println(fmt.Errorf("%s // %w", report.ObjectName, err))
+		} else {
+			log.Printf("%s // Статус отчета по звонкам: %v ", report.ObjectName, callsReq.IsOK)
 		}
-
-		log.Printf("%s // Статус отчета по звонкам: %v ", report.ObjectName, callsReq.IsOK)
 	}
 
 	if report.OfflineMessageTable != "" {
@@ -126,9 +126,10 @@ func getReport(ctx context.Context, wg *sync.WaitGroup, c pb.ComagicServiceClien
 		})
 		if err != nil {
 			log.Println(fmt.Errorf("%s // %w", report.ObjectName, err))
+		} else {
+			log.Printf("%s // Статус отчета по заявкам: %v ", report.ObjectName, messagesReq.IsOK)
 		}
 
-		log.Printf("%s // Статус отчета по заявкам: %v ", report.ObjectName, messagesReq.IsOK)
 	}
 }
 
