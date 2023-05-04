@@ -1,0 +1,24 @@
+time: "07:47" // Время ежедневного запуска
+
+grpc:
+  ip: "0.0.0.0"           // Host
+  port: 50051             // Порт, который будет прослушивать сервис
+
+reports:
+  - object: "название клиента 1"
+    comagic_token: "xxxxxxxxxx"
+    google_service_key: "service_key.json"
+    project_id: 'bq-project-id'
+    dataset_id: 'bq-dataset-id'
+    bucket_name: 'storage-bucket-name'
+    offline_message_table: 'bq_offline_messages_table'
+    calls_table: 'bq_calls_comagic_table'
+
+  - object: "название клиента 2"
+    comagic_token: "xxxxxxxxxx"
+    google_service_key: "service_key.json"
+    project_id: 'bq-project-id'
+    dataset_id: 'bq-dataset-id'
+    bucket_name: 'storage-bucket-name'
+    offline_message_table: 'bq_offline_messages_table'
+    calls_table: 'bq_calls_comagic_table'
