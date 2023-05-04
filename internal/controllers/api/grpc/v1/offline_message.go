@@ -140,7 +140,7 @@ func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOffline
 		}
 	}(bqClient)
 
-	bqOfflineMessageRepo := cmBQ.NewOfflineMessageRepository(bqClient, req.BqConfig.DatasetID, req.BqConfig.TableID, s.logger)
+	bqOfflineMessageRepo := cmBQ.NewOfflineMessageRepository(bqClient, req.BqConfig.DatasetID, req.BqConfig.TableID, &methodLogger)
 
 	csClient, err := storage.NewClient(ctx, option.WithCredentialsFile(csServiceKey))
 	if err != nil {
@@ -167,7 +167,7 @@ func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOffline
 
 	err = cmPolicy.PushOfflineMessageToBQ(ctx, dateFrom, dateTill.AddDate(0, 0, 1), fields, req.CsConfig.BucketName)
 	if err != nil {
-		s.logger.Err(err).Msg("ошибка выполнения")
+		methodLogger.Error().Err(err).Msg(msgErrMethod)
 
 		return &pb.PushOfflineMessagesToBQResponse{
 			IsOK: false,
