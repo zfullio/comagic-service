@@ -19,6 +19,12 @@
 * Удаление данных из таблицы BigQuery за период указаннй в настройках сбора
 * Запись данных в таблицу BigQuery из CloudStorage
 
+### Примечания
+
+* Cloud Storage Bucket должен быть уже создан
+* BigQuery Dataset должен быть уже создан
+* BigQuery Table создается автоматически если отсутствует
+
 ## Makefile
 
 `gen_go` - Конверт-ия proto файлов в код Go на основании `api/grpc/comagic.proto`
@@ -37,6 +43,12 @@ make gen_python
 
 ```bash
 make build_server
+```
+
+`build_schedule_client` - Компиляция исполняемого файла для клиента (/bin/schedule_client)
+
+```bash
+make build_schedule_client
 ```
 
 ## Опции
