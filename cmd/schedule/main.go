@@ -25,6 +25,8 @@ func main() {
 		log.Fatalf("could not read config: %v", err)
 	}
 
+	defer GracefulShutdown()
+
 	fmt.Printf("Количество отчетов: %d\n", len(cfg.Reports))
 	fmt.Printf("Запуск ежедневно в: %s\n", cfg.Time)
 
@@ -49,8 +51,6 @@ func main() {
 }
 
 func scheduleRun(cfg config.ScheduleConfig) {
-	defer GracefulShutdown()
-
 	conn, err := grpc.Dial(fmt.Sprintf("%s:%v", cfg.GRPC.IP, cfg.GRPC.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
@@ -109,7 +109,7 @@ func getReport(ctx context.Context, wg *sync.WaitGroup, c pb.ComagicServiceClien
 	}
 
 	if report.OfflineMessageTable != "" {
-		messagesReq, err := c.PushOfflineMessagesToBQ(ctx, &pb.PushOfflineMessagesToBQRequest{
+		messagesResp, err := c.PushOfflineMessagesToBQ(ctx, &pb.PushOfflineMessagesToBQRequest{
 			ComagicToken: report.ComagicToken,
 			BqConfig: &pb.BqConfig{
 				ProjectID:  report.ProjectID,
@@ -126,8 +126,10 @@ func getReport(ctx context.Context, wg *sync.WaitGroup, c pb.ComagicServiceClien
 		})
 		if err != nil {
 			log.Println(fmt.Errorf("%s // %w", report.ObjectName, err))
-		} else {
-			log.Printf("%s // Статус отчета по заявкам: %v ", report.ObjectName, messagesReq.IsOK)
+		}
+
+		if messagesResp != nil {
+			log.Printf("%s // Статус отчета по заявкам: %v ", report.ObjectName, messagesResp.IsOK)
 		}
 	}
 }
