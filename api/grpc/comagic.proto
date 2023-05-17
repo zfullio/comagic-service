@@ -1,7 +1,10 @@
 syntax = "proto3";
 
+package comagic;
+
 option go_package = "./pb";
 
+// The comagic service definition.
 service ComagicService {
   rpc PushCallsToBQ(PushCallsToBQRequest) returns(PushCallsToBQResponse); // Отправка звонков в BigQuery
   rpc PushOfflineMessagesToBQ(PushOfflineMessagesToBQRequest) returns(PushOfflineMessagesToBQResponse); // Отправка заявок в BigQuery
@@ -11,56 +14,57 @@ service ComagicService {
 
 //Конфигурация для BigQuery
 message BqConfig{
-  string projectID = 1;
-  string datasetID = 2;
-  string tableID = 3;
-  string serviceKey = 4; // Название файла сервисного ключа
+  string project_id = 1;
+  string dataset_id = 2;
+  string table_id = 3;
+  string service_key = 4; // Название файла сервисного ключа
 }
 
 //Конфигурация для CloudStorage
 message CsConfig{
-  string serviceKey = 1;
-  string bucketName = 2; // Название файла сервисного ключа
+  string service_key = 1;
+  string bucket_name = 2; // Название файла сервисного ключа
 }
 
+message Period{
+  string date_from = 1;
+  string date_till = 2;
+}
 
 message PushCallsToBQRequest{
-  string comagicToken = 1;
-  BqConfig bqConfig = 2; //Конфигурация для BigQuery
-  CsConfig csConfig = 3; //Конфигурация для CloudStorage
-
-  string dateFrom = 4; // dateFrom is date represented in the ISO-8601 format
-  string dateTill = 5; // dateTill is date represented in the ISO-8601 format
+  string comagic_token = 1; // required
+  BqConfig bq_config = 2; // required Конфигурация для BigQuery
+  CsConfig cs_config = 3; // required Конфигурация для CloudStorage
+  Period period = 4; // required
 }
+
 message PushCallsToBQResponse{
-  bool isOK = 1;
+  bool is_ok = 1;
 }
-
 
 message PushOfflineMessagesToBQRequest{
-  string comagicToken = 1;
-  BqConfig bqConfig = 2; //Конфигурация для BigQuery
-  CsConfig csConfig = 3; //Конфигурация для CloudStorage
-
-  string dateFrom = 4; // dateFrom is date represented in the ISO-8601 format
-  string dateTill = 5; // dateTill is date represented in the ISO-8601 format
+  string comagic_token = 1; // required
+  BqConfig bq_config = 2; // required Конфигурация для BigQuery
+  CsConfig cs_config = 3; // required Конфигурация для CloudStorage
+  Period period = 4; // required
 }
+
 message PushOfflineMessagesToBQResponse{
-  bool isOK = 1;
+  bool is_ok = 1;
 }
-
 
 message GetCampaignsRequest{
-  string comagicToken = 1;
+  string comagic_token = 1;
 }
+
 message GetCampaignsResponse{
 
 }
 
-
 message GetCampaignsConditionsRequest{
-  string comagicToken = 1;
+  string comagic_token = 1;
 }
+
 message GetCampaignsConditionsResponse{
 
 }

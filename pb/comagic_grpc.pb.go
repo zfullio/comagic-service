@@ -38,7 +38,7 @@ func NewComagicServiceClient(cc grpc.ClientConnInterface) ComagicServiceClient {
 
 func (c *comagicServiceClient) PushCallsToBQ(ctx context.Context, in *PushCallsToBQRequest, opts ...grpc.CallOption) (*PushCallsToBQResponse, error) {
 	out := new(PushCallsToBQResponse)
-	err := c.cc.Invoke(ctx, "/ComagicService/PushCallsToBQ", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/comagic.ComagicService/PushCallsToBQ", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (c *comagicServiceClient) PushCallsToBQ(ctx context.Context, in *PushCallsT
 
 func (c *comagicServiceClient) PushOfflineMessagesToBQ(ctx context.Context, in *PushOfflineMessagesToBQRequest, opts ...grpc.CallOption) (*PushOfflineMessagesToBQResponse, error) {
 	out := new(PushOfflineMessagesToBQResponse)
-	err := c.cc.Invoke(ctx, "/ComagicService/PushOfflineMessagesToBQ", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/comagic.ComagicService/PushOfflineMessagesToBQ", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (c *comagicServiceClient) PushOfflineMessagesToBQ(ctx context.Context, in *
 
 func (c *comagicServiceClient) GetCampaigns(ctx context.Context, in *GetCampaignsRequest, opts ...grpc.CallOption) (*GetCampaignsResponse, error) {
 	out := new(GetCampaignsResponse)
-	err := c.cc.Invoke(ctx, "/ComagicService/GetCampaigns", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/comagic.ComagicService/GetCampaigns", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (c *comagicServiceClient) GetCampaigns(ctx context.Context, in *GetCampaign
 
 func (c *comagicServiceClient) GetCampaignsConditions(ctx context.Context, in *GetCampaignsConditionsRequest, opts ...grpc.CallOption) (*GetCampaignsConditionsResponse, error) {
 	out := new(GetCampaignsConditionsResponse)
-	err := c.cc.Invoke(ctx, "/ComagicService/GetCampaignsConditions", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/comagic.ComagicService/GetCampaignsConditions", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,7 @@ func _ComagicService_PushCallsToBQ_Handler(srv interface{}, ctx context.Context,
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ComagicService/PushCallsToBQ",
+		FullMethod: "/comagic.ComagicService/PushCallsToBQ",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ComagicServiceServer).PushCallsToBQ(ctx, req.(*PushCallsToBQRequest))
@@ -140,7 +140,7 @@ func _ComagicService_PushOfflineMessagesToBQ_Handler(srv interface{}, ctx contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ComagicService/PushOfflineMessagesToBQ",
+		FullMethod: "/comagic.ComagicService/PushOfflineMessagesToBQ",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ComagicServiceServer).PushOfflineMessagesToBQ(ctx, req.(*PushOfflineMessagesToBQRequest))
@@ -158,7 +158,7 @@ func _ComagicService_GetCampaigns_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ComagicService/GetCampaigns",
+		FullMethod: "/comagic.ComagicService/GetCampaigns",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ComagicServiceServer).GetCampaigns(ctx, req.(*GetCampaignsRequest))
@@ -176,7 +176,7 @@ func _ComagicService_GetCampaignsConditions_Handler(srv interface{}, ctx context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ComagicService/GetCampaignsConditions",
+		FullMethod: "/comagic.ComagicService/GetCampaignsConditions",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ComagicServiceServer).GetCampaignsConditions(ctx, req.(*GetCampaignsConditionsRequest))
@@ -188,7 +188,7 @@ func _ComagicService_GetCampaignsConditions_Handler(srv interface{}, ctx context
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var ComagicService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "ComagicService",
+	ServiceName: "comagic.ComagicService",
 	HandlerType: (*ComagicServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
