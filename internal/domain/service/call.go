@@ -74,14 +74,14 @@ func (s CallService) SendAll(ctx context.Context, dateFrom time.Time, dateTill t
 		return fmt.Errorf("ошибка заливки на storage: %w", err)
 	}
 
-	s.logger.Info().Msgf("Удаление за %s -- %s", dateFrom.Format(time.DateOnly), dateTill.Format(time.DateOnly))
+	s.logger.Info().Msgf("Удаление из BQ за %s -- %s", dateFrom.Format(time.DateOnly), dateTill.Format(time.DateOnly))
 
 	err = s.bq.DeleteByDateColumn(ctx, dateFrom, dateTill)
 	if err != nil {
 		return fmt.Errorf("ошибка удаления из bq: %w", err)
 	}
 
-	s.logger.Info().Msgf("Отправка файла в Cloud Storage: %s", filename)
+	s.logger.Info().Msgf("Отправка в Cloud Storage: %s", filename)
 
 	err = s.bq.SendFromCS(ctx, bucketName, filename)
 	if err != nil {
