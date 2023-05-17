@@ -2,6 +2,7 @@ package comagic
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,7 +15,7 @@ const limitItems = 10000
 
 const minuteLimit = 5
 
-func (c *Client) GetAccount() (RespGetAccount, error) {
+func (c *Client) GetAccount(ctx context.Context) (RespGetAccount, error) {
 	params := GetAccountParams{AccessToken: c.Token}
 	payload := c.NewPayload(GetAccount, params)
 
@@ -23,7 +24,7 @@ func (c *Client) GetAccount() (RespGetAccount, error) {
 		return RespGetAccount{}, fmt.Errorf("ошибка формирования запроса: %w", mErr)
 	}
 
-	req, reqErr := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
+	req, reqErr := http.NewRequestWithContext(ctx, http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
 	if reqErr != nil {
 		return RespGetAccount{}, fmt.Errorf("ошибка создания запроса: %w", reqErr)
 	}
@@ -72,7 +73,7 @@ type RespGetAccount struct {
 	} `json:"result"`
 }
 
-func (c *Client) GetCampaigns(fields []string, filter Filter) (RespCampaignsInfo, error) {
+func (c *Client) GetCampaigns(ctx context.Context, fields []string, filter Filter) (RespCampaignsInfo, error) {
 	params := GetRequestParams{
 		AccessToken: c.Token,
 		Limit:       limitItems,
@@ -86,7 +87,7 @@ func (c *Client) GetCampaigns(fields []string, filter Filter) (RespCampaignsInfo
 		return RespCampaignsInfo{}, fmt.Errorf("ошибка формирования запроса: %w", mErr)
 	}
 
-	req, reqErr := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
+	req, reqErr := http.NewRequestWithContext(ctx, http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
 	if reqErr != nil {
 		return RespCampaignsInfo{}, fmt.Errorf("ошибка создания запроса: %w", reqErr)
 	}
@@ -205,7 +206,7 @@ type DynamicCallTracking struct {
 	CoverageVisitors    float64 `json:"coverage_visitors"`
 }
 
-func (c *Client) GetVirtualNumbers() (RespVirtualNumbersInfo, error) {
+func (c *Client) GetVirtualNumbers(ctx context.Context) (RespVirtualNumbersInfo, error) {
 	params := GetRequestParams{
 		AccessToken: c.Token,
 	}
@@ -216,7 +217,7 @@ func (c *Client) GetVirtualNumbers() (RespVirtualNumbersInfo, error) {
 		return RespVirtualNumbersInfo{}, fmt.Errorf("ошибка формирования запроса: %w", mErr)
 	}
 
-	req, reqErr := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
+	req, reqErr := http.NewRequestWithContext(ctx, http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
 	if reqErr != nil {
 		return RespVirtualNumbersInfo{}, fmt.Errorf("request error: %w", reqErr)
 	}
@@ -280,7 +281,7 @@ type RespVirtualNumbersInfo struct {
 	} `json:"result"`
 }
 
-func (c *Client) GetSites() error {
+func (c *Client) GetSites(ctx context.Context) error {
 	params := GetRequestParams{
 		AccessToken: c.Token,
 	}
@@ -291,7 +292,7 @@ func (c *Client) GetSites() error {
 		return fmt.Errorf("ошибка формирования запроса: %w", mErr)
 	}
 
-	req, reqErr := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
+	req, reqErr := http.NewRequestWithContext(ctx, http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
 	if reqErr != nil {
 		return fmt.Errorf("request error: %w", reqErr)
 	}
@@ -368,7 +369,7 @@ type RespSitesInfo struct {
 	} `json:"result"`
 }
 
-func (c *Client) GetCallsReport(dateFrom time.Time, dateTill time.Time, fields []string) ([]CallInfo, error) {
+func (c *Client) GetCallsReport(ctx context.Context, dateFrom time.Time, dateTill time.Time, fields []string) ([]CallInfo, error) {
 	if dateFrom.After(dateTill) {
 		return nil, fmt.Errorf("дата окончания не может быть раньше даты начала")
 	}
@@ -397,7 +398,7 @@ func (c *Client) GetCallsReport(dateFrom time.Time, dateTill time.Time, fields [
 			return nil, fmt.Errorf("ошибка формирования запроса: %w", mErr)
 		}
 
-		req, reqErr := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
+		req, reqErr := http.NewRequestWithContext(ctx, http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
 		if reqErr != nil {
 			return nil, fmt.Errorf("request error: %w", reqErr)
 		}
@@ -451,7 +452,7 @@ func ControlLimits(l Limits) {
 	}
 }
 
-func (c *Client) GetOfflineMessagesReport(dateFrom time.Time, dateTill time.Time, fields []string) ([]OfflineMessageInfo, error) {
+func (c *Client) GetOfflineMessagesReport(ctx context.Context, dateFrom time.Time, dateTill time.Time, fields []string) ([]OfflineMessageInfo, error) {
 	if dateFrom.After(dateTill) {
 		return nil, fmt.Errorf("дата окончания не может быть раньше даты начала")
 	}
@@ -480,7 +481,7 @@ func (c *Client) GetOfflineMessagesReport(dateFrom time.Time, dateTill time.Time
 			return nil, fmt.Errorf("ошибка формирования запроса: %w", mErr)
 		}
 
-		req, reqErr := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
+		req, reqErr := http.NewRequestWithContext(ctx, http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
 		if reqErr != nil {
 			return nil, fmt.Errorf("ошибка формирования запроса: %w", reqErr)
 		}

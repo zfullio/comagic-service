@@ -11,7 +11,7 @@ import (
 )
 
 type OfflineMessagesRepositoryTracking interface {
-	GetByDate(dateFrom time.Time, dateTill time.Time, fields []string) (messages []entity.OfflineMessage, err error)
+	GetByDate(ctx context.Context, dateFrom time.Time, dateTill time.Time, fields []string) (messages []entity.OfflineMessage, err error)
 }
 
 type OfflineMessageRepositoryBQ interface {
@@ -43,10 +43,10 @@ func NewOfflineMessageService(tracking OfflineMessagesRepositoryTracking, bq Off
 	}
 }
 
-func (s OfflineMessageService) GetByDate(dateFrom time.Time, dateTill time.Time, fields []string) ([]entity.OfflineMessage, error) {
+func (s OfflineMessageService) GetByDate(ctx context.Context, dateFrom time.Time, dateTill time.Time, fields []string) ([]entity.OfflineMessage, error) {
 	s.logger.Trace().Msg("GetByDate")
 
-	messages, err := s.tracking.GetByDate(dateFrom, dateTill, fields)
+	messages, err := s.tracking.GetByDate(ctx, dateFrom, dateTill, fields)
 	if err != nil {
 		return messages, fmt.Errorf("tracking err: %w", err)
 	}
@@ -174,7 +174,7 @@ func NewOfflineMessageCSV(message entity.OfflineMessage) *entity.OfflineMessageC
 func (s OfflineMessageService) PushOfflineMessagesToBQ(ctx context.Context, dateFrom time.Time, dateTill time.Time, fields []string, bucketName string) error {
 	s.logger.Trace().Msg("PushOfflineMessagesToBQ")
 
-	messages, err := s.GetByDate(dateFrom, dateTill, fields)
+	messages, err := s.GetByDate(ctx, dateFrom, dateTill, fields)
 	if err != nil {
 		return err
 	}

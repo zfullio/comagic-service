@@ -3,6 +3,7 @@ package comagic
 import (
 	"Comagic/internal/domain/entity"
 	cm "Comagic/pkg/comagic"
+	"context"
 	"fmt"
 	"github.com/rs/zerolog"
 	"strings"
@@ -23,10 +24,10 @@ func NewOfflineMessageRepository(tracking *cm.Client, logger *zerolog.Logger) *o
 	}
 }
 
-func (or offlineMessageRepository) GetByDate(dateFrom time.Time, dateTill time.Time, fields []string) ([]entity.OfflineMessage, error) {
+func (or offlineMessageRepository) GetByDate(ctx context.Context, dateFrom time.Time, dateTill time.Time, fields []string) ([]entity.OfflineMessage, error) {
 	or.logger.Trace().Msgf("GetByDate: %v, %v", dateFrom, dateTill)
 
-	messagesFromRepo, err := or.client.GetOfflineMessagesReport(dateFrom, dateTill, fields)
+	messagesFromRepo, err := or.client.GetOfflineMessagesReport(ctx, dateFrom, dateTill, fields)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения заявок: %w", err)
 	}

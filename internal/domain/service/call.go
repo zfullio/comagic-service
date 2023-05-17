@@ -11,7 +11,7 @@ import (
 )
 
 type CallRepositoryTracking interface {
-	GetByDate(dateFrom time.Time, dateTill time.Time, fields []string) (calls []entity.Call, err error)
+	GetByDate(ctx context.Context, dateFrom time.Time, dateTill time.Time, fields []string) (calls []entity.Call, err error)
 }
 
 type CallRepositoryBQ interface {
@@ -43,10 +43,10 @@ func NewCallService(tracking CallRepositoryTracking, bq CallRepositoryBQ, cs Cal
 	}
 }
 
-func (s CallService) GetByDate(dateFrom time.Time, dateTill time.Time, fields []string) ([]entity.Call, error) {
+func (s CallService) GetByDate(ctx context.Context, dateFrom time.Time, dateTill time.Time, fields []string) ([]entity.Call, error) {
 	s.logger.Trace().Msg("GetByDate")
 
-	calls, gErr := s.tracking.GetByDate(dateFrom, dateTill, fields)
+	calls, gErr := s.tracking.GetByDate(ctx, dateFrom, dateTill, fields)
 	if gErr != nil {
 		return calls, fmt.Errorf("tracking err: %w", gErr)
 	}
@@ -183,7 +183,7 @@ func NewCallCSV(call entity.Call) *entity.CallCSV {
 func (s CallService) PushCallsToBQ(ctx context.Context, dateFrom time.Time, dateTill time.Time, fields []string, bucketName string) error {
 	s.logger.Trace().Msg("PushCallsToBQ")
 
-	calls, err := s.GetByDate(dateFrom, dateTill, fields)
+	calls, err := s.GetByDate(ctx, dateFrom, dateTill, fields)
 	if err != nil {
 		return err
 	}

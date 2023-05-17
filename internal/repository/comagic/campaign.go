@@ -3,6 +3,7 @@ package comagic
 import (
 	"Comagic/internal/domain/entity"
 	"Comagic/pkg/comagic"
+	"context"
 	"fmt"
 	"github.com/rs/zerolog"
 	"time"
@@ -22,10 +23,10 @@ func NewCampaignRepository(tracking comagic.Client, logger *zerolog.Logger) *cam
 	}
 }
 
-func (cr *campaignRepository) GetWithFilter(fields []string, filter comagic.Filter) ([]entity.Campaign, error) {
+func (cr *campaignRepository) GetWithFilter(ctx context.Context, fields []string, filter comagic.Filter) ([]entity.Campaign, error) {
 	cr.logger.Trace().Msg("GetWithFilter")
 
-	data, err := cr.client.GetCampaigns(fields, filter)
+	data, err := cr.client.GetCampaigns(ctx, fields, filter)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения кампаний: %w", err)
 	}

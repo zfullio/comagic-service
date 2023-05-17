@@ -3,6 +3,7 @@ package comagic
 import (
 	"Comagic/internal/domain/entity"
 	cm "Comagic/pkg/comagic"
+	"context"
 	"fmt"
 	"github.com/rs/zerolog"
 	"strings"
@@ -23,10 +24,10 @@ func NewCallRepository(tracking *cm.Client, logger *zerolog.Logger) *callReposit
 	}
 }
 
-func (cr callRepository) GetByDate(dateFrom time.Time, dateTill time.Time, fields []string) ([]entity.Call, error) {
+func (cr callRepository) GetByDate(ctx context.Context, dateFrom time.Time, dateTill time.Time, fields []string) ([]entity.Call, error) {
 	cr.logger.Trace().Msgf("GetByDate: %v -- %v", dateFrom.Format(time.DateOnly), dateTill.Format(time.DateOnly))
 
-	callsFromRepo, gErr := cr.client.GetCallsReport(dateFrom, dateTill, fields)
+	callsFromRepo, gErr := cr.client.GetCallsReport(ctx, dateFrom, dateTill, fields)
 	if gErr != nil {
 		return nil, fmt.Errorf("ошибка получения звонков: %w", gErr)
 	}
