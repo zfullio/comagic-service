@@ -5,12 +5,10 @@ import (
 	"time"
 )
 
-func generateID(method Method) (id string) {
-	id = fmt.Sprintf("%s_%s", method, time.Now().Format("2006-01-02 15:04"))
-	return
+func generateID(method Method) string {
+	return fmt.Sprintf("%s_%s", method, time.Now().Format("2006-01-02 15:04"))
 }
 
-func (c *Client) buildLink() (link string) {
-	link = fmt.Sprintf("https://%v/v%s", c.host, c.Version)
-	return
+func (c *Client) buildLink() string {
+	return fmt.Sprintf("https://%v/v%s", c.host, c.Version)
 }
