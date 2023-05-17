@@ -14,42 +14,46 @@ const limitItems = 10000
 
 const minuteLimit = 5
 
-func (c *Client) GetAccount() (data RespGetAccount, err error) {
+func (c *Client) GetAccount() (RespGetAccount, error) {
 	params := GetAccountParams{AccessToken: c.Token}
 	payload := c.NewPayload(GetAccount, params)
 
-	payloadJSON, err := json.Marshal(payload)
-	if err != nil {
-		return data, fmt.Errorf("ошибка формирования запроса: %w", err)
+	payloadJSON, mErr := json.Marshal(payload)
+	if mErr != nil {
+		return RespGetAccount{}, fmt.Errorf("ошибка формирования запроса: %w", mErr)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
-	if err != nil {
-		return data, err
+	req, reqErr := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
+	if reqErr != nil {
+		return RespGetAccount{}, fmt.Errorf("ошибка создания запроса: %w", reqErr)
 	}
 
 	req.Header.Add("Content-Type", "application/json")
 
-	resp, err := c.tr.Do(req)
-	if err != nil {
-		return data, err
+	resp, respErr := c.tr.Do(req)
+	if respErr != nil {
+		return RespGetAccount{}, fmt.Errorf("ошибка отправки запроса: %w", respErr)
 	}
 
-	responseBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return data, err
+	defer resp.Body.Close()
+
+	responseBody, rErr := io.ReadAll(resp.Body)
+	if rErr != nil {
+		return RespGetAccount{}, fmt.Errorf("ошибка чтения ответа: %w", rErr)
 	}
 
-	err = json.Unmarshal(responseBody, &data)
-	if err != nil {
-		return data, err
+	var data RespGetAccount
+
+	unmErr := json.Unmarshal(responseBody, &data)
+	if unmErr != nil {
+		return RespGetAccount{}, fmt.Errorf("ошибка декодирования ответа: %w", unmErr)
 	}
 
 	if data.Error.Code != 0 {
-		return data, &data.Error
+		return RespGetAccount{}, &data.Error
 	}
 
-	return data, err
+	return data, nil
 }
 
 type GetAccountParams struct {
@@ -68,7 +72,7 @@ type RespGetAccount struct {
 	} `json:"result"`
 }
 
-func (c *Client) GetCampaigns(fields []string, filter Filter) (data RespCampaignsInfo, err error) {
+func (c *Client) GetCampaigns(fields []string, filter Filter) (RespCampaignsInfo, error) {
 	params := GetRequestParams{
 		AccessToken: c.Token,
 		Limit:       limitItems,
@@ -77,38 +81,42 @@ func (c *Client) GetCampaigns(fields []string, filter Filter) (data RespCampaign
 	}
 	payload := c.NewPayload(GetCampaigns, params)
 
-	payloadJSON, err := json.Marshal(payload)
-	if err != nil {
-		return data, fmt.Errorf("ошибка формирования запроса: %w", err)
+	payloadJSON, mErr := json.Marshal(payload)
+	if mErr != nil {
+		return RespCampaignsInfo{}, fmt.Errorf("ошибка формирования запроса: %w", mErr)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
-	if err != nil {
-		return data, err
+	req, reqErr := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
+	if reqErr != nil {
+		return RespCampaignsInfo{}, fmt.Errorf("ошибка создания запроса: %w", reqErr)
 	}
 
 	req.Header.Add("Content-Type", "application/json")
 
-	resp, err := c.tr.Do(req)
-	if err != nil {
-		return data, err
+	resp, respErr := c.tr.Do(req)
+	if respErr != nil {
+		return RespCampaignsInfo{}, fmt.Errorf("ошибка отправки запроса: %w", respErr)
 	}
 
-	responseBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return data, err
+	defer resp.Body.Close()
+
+	responseBody, bErr := io.ReadAll(resp.Body)
+	if bErr != nil {
+		return RespCampaignsInfo{}, fmt.Errorf("ошибка чтения ответа: %w", bErr)
 	}
 
-	err = json.Unmarshal(responseBody, &data)
-	if err != nil {
-		return data, fmt.Errorf("json.Unmarshal error: %w", err)
+	var data RespCampaignsInfo
+
+	unmErr := json.Unmarshal(responseBody, &data)
+	if unmErr != nil {
+		return RespCampaignsInfo{}, fmt.Errorf("json.Unmarshal error: %w", unmErr)
 	}
 
 	if data.Error.Code != 0 {
 		return data, &data.Error
 	}
 
-	return data, err
+	return data, nil
 }
 
 type Filter struct {
@@ -197,44 +205,48 @@ type DynamicCallTracking struct {
 	CoverageVisitors    float64 `json:"coverage_visitors"`
 }
 
-func (c *Client) GetVirtualNumbers() (data RespVirtualNumbersInfo, err error) {
+func (c *Client) GetVirtualNumbers() (RespVirtualNumbersInfo, error) {
 	params := GetRequestParams{
 		AccessToken: c.Token,
 	}
 	payload := c.NewPayload(GetVirtualNumbers, params)
 
-	payloadJSON, err := json.Marshal(payload)
-	if err != nil {
-		return data, fmt.Errorf("ошибка формирования запроса: %w", err)
+	payloadJSON, mErr := json.Marshal(payload)
+	if mErr != nil {
+		return RespVirtualNumbersInfo{}, fmt.Errorf("ошибка формирования запроса: %w", mErr)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
-	if err != nil {
-		return data, fmt.Errorf("request error: %w", err)
+	req, reqErr := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
+	if reqErr != nil {
+		return RespVirtualNumbersInfo{}, fmt.Errorf("request error: %w", reqErr)
 	}
 
 	req.Header.Add("Content-Type", "application/json; charset=UTF-8")
 
-	resp, err := c.tr.Do(req)
-	if err != nil {
-		return data, err
+	resp, respErr := c.tr.Do(req)
+	if respErr != nil {
+		return RespVirtualNumbersInfo{}, fmt.Errorf("ошибка отправки запроса: %w", respErr)
 	}
 
-	responseBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return data, err
+	defer resp.Body.Close()
+
+	responseBody, rErr := io.ReadAll(resp.Body)
+	if rErr != nil {
+		return RespVirtualNumbersInfo{}, fmt.Errorf("ошибка чтения ответа: %w", rErr)
 	}
 
-	err = json.Unmarshal(responseBody, &data)
-	if err != nil {
-		return data, err
+	var data RespVirtualNumbersInfo
+
+	unmErr := json.Unmarshal(responseBody, &data)
+	if unmErr != nil {
+		return RespVirtualNumbersInfo{}, fmt.Errorf("ошибка десериализации ответа: %w", unmErr)
 	}
 
 	if data.Error.Code != 0 {
 		return data, &data.Error
 	}
 
-	return data, err
+	return data, nil
 }
 
 type RespVirtualNumbersInfo struct {
@@ -274,33 +286,35 @@ func (c *Client) GetSites() error {
 	}
 	payload := c.NewPayload(GetSites, params)
 
-	payloadJSON, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("ошибка формирования запроса: %w", err)
+	payloadJSON, mErr := json.Marshal(payload)
+	if mErr != nil {
+		return fmt.Errorf("ошибка формирования запроса: %w", mErr)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
-	if err != nil {
-		return fmt.Errorf("request error: %w", err)
+	req, reqErr := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
+	if reqErr != nil {
+		return fmt.Errorf("request error: %w", reqErr)
 	}
 
 	req.Header.Add("Content-Type", "application/json")
 
-	resp, err := c.tr.Do(req)
-	if err != nil {
-		return err
+	resp, respErr := c.tr.Do(req)
+	if respErr != nil {
+		return fmt.Errorf("ошибка отправки запроса: %w", respErr)
 	}
 
-	responseBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
+	defer resp.Body.Close()
+
+	responseBody, rErr := io.ReadAll(resp.Body)
+	if rErr != nil {
+		return fmt.Errorf("ошибка чтения ответа: %w", rErr)
 	}
 
 	data := RespSitesInfo{}
 
-	err = json.Unmarshal(responseBody, &data)
-	if err != nil {
-		return err
+	unmErr := json.Unmarshal(responseBody, &data)
+	if unmErr != nil {
+		return fmt.Errorf("ошибка десериализации ответа: %w", unmErr)
 	}
 
 	if data.Error.Code != 0 {
@@ -354,13 +368,16 @@ type RespSitesInfo struct {
 	} `json:"result"`
 }
 
-func (c *Client) GetCallsReport(dateFrom time.Time, dateTill time.Time, fields []string) (calls []CallInfo, err error) {
+func (c *Client) GetCallsReport(dateFrom time.Time, dateTill time.Time, fields []string) ([]CallInfo, error) {
 	if dateFrom.After(dateTill) {
-		return calls, fmt.Errorf("дата окончания не может быть раньше даты начала")
+		return nil, fmt.Errorf("дата окончания не может быть раньше даты начала")
 	}
 
-	limit := 10000
-	offset := 0
+	var (
+		limit  = 10000
+		offset = 0
+		calls  []CallInfo
+	)
 
 	for {
 		params := GetCallsRequestParams{
@@ -375,42 +392,42 @@ func (c *Client) GetCallsReport(dateFrom time.Time, dateTill time.Time, fields [
 		}
 		payload := c.NewPayload(GetCallsReport, params)
 
-		payloadJSON, err := json.Marshal(payload)
-		if err != nil {
-			return calls, fmt.Errorf("ошибка формирования запроса: %w", err)
+		payloadJSON, mErr := json.Marshal(payload)
+		if mErr != nil {
+			return nil, fmt.Errorf("ошибка формирования запроса: %w", mErr)
 		}
 
-		req, err := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
-		if err != nil {
-			return calls, err
+		req, reqErr := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
+		if reqErr != nil {
+			return nil, fmt.Errorf("request error: %w", reqErr)
 		}
 
 		req.Header.Add("Content-Type", "application/json")
 
-		resp, err := c.tr.Do(req)
-		if err != nil {
-			return calls, err
+		resp, respErr := c.tr.Do(req)
+		if respErr != nil {
+			return nil, fmt.Errorf("ошибка отправки запроса: %w", respErr)
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			return calls, fmt.Errorf("ошибка получения ответа от API: %s", resp.Status)
+			return nil, fmt.Errorf("ошибка получения ответа от API: %s", resp.Status)
 		}
 
-		responseBody, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return calls, err
+		responseBody, rErr := io.ReadAll(resp.Body)
+		if rErr != nil {
+			return nil, fmt.Errorf("ошибка чтения ответа: %w", rErr)
 		}
 
 		var data = RespCallsReport{}
 		data.Result.Data = make([]CallInfo, 0, limit)
 
-		err = json.Unmarshal(responseBody, &data)
-		if err != nil {
-			return calls, err
+		unmErr := json.Unmarshal(responseBody, &data)
+		if unmErr != nil {
+			return nil, fmt.Errorf("ошибка десериализации ответа: %w", unmErr)
 		}
 
 		if data.Error.Code != 0 {
-			return calls, &data.Error
+			return nil, &data.Error
 		}
 
 		calls = append(calls, data.Result.Data...)
@@ -424,7 +441,7 @@ func (c *Client) GetCallsReport(dateFrom time.Time, dateTill time.Time, fields [
 		}
 	}
 
-	return calls, err
+	return calls, nil
 }
 
 func ControlLimits(l Limits) {
@@ -434,13 +451,16 @@ func ControlLimits(l Limits) {
 	}
 }
 
-func (c *Client) GetOfflineMessagesReport(dateFrom time.Time, dateTill time.Time, fields []string) (messages []OfflineMessageInfo, err error) {
+func (c *Client) GetOfflineMessagesReport(dateFrom time.Time, dateTill time.Time, fields []string) ([]OfflineMessageInfo, error) {
 	if dateFrom.After(dateTill) {
-		return messages, fmt.Errorf("дата окончания не может быть раньше даты начала")
+		return nil, fmt.Errorf("дата окончания не может быть раньше даты начала")
 	}
 
-	limit := 10000
-	offset := 0
+	var (
+		limit    = 10000
+		offset   = 0
+		messages []OfflineMessageInfo
+	)
 
 	for {
 		params := GetCallsRequestParams{
@@ -455,42 +475,42 @@ func (c *Client) GetOfflineMessagesReport(dateFrom time.Time, dateTill time.Time
 		}
 		payload := c.NewPayload(GetOfflineMessagesReport, params)
 
-		payloadJSON, err := json.Marshal(payload)
-		if err != nil {
-			return messages, fmt.Errorf("ошибка формирования запроса: %w", err)
+		payloadJSON, mErr := json.Marshal(payload)
+		if mErr != nil {
+			return nil, fmt.Errorf("ошибка формирования запроса: %w", mErr)
 		}
 
-		req, err := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
-		if err != nil {
-			return messages, err
+		req, reqErr := http.NewRequest(http.MethodPost, c.buildLink(), bytes.NewBuffer(payloadJSON))
+		if reqErr != nil {
+			return nil, fmt.Errorf("ошибка формирования запроса: %w", reqErr)
 		}
 
 		req.Header.Add("Content-Type", "application/json")
 
-		resp, err := c.tr.Do(req)
-		if err != nil {
-			return messages, err
+		resp, respErr := c.tr.Do(req)
+		if respErr != nil {
+			return nil, fmt.Errorf("ошибка отправки запроса: %w", respErr)
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			return messages, fmt.Errorf("ошибка получения ответа от API: %s", resp.Status)
+			return nil, fmt.Errorf("ошибка получения ответа от API: %s", resp.Status)
 		}
 
-		responseBody, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return messages, err
+		responseBody, rErr := io.ReadAll(resp.Body)
+		if rErr != nil {
+			return nil, fmt.Errorf("ошибка чтения ответа: %w", rErr)
 		}
 
 		var data = RespOfflineMessagesReport{}
 		data.Result.Data = make([]OfflineMessageInfo, 0, limit)
 
-		err = json.Unmarshal(responseBody, &data)
-		if err != nil {
-			return messages, err
+		unmErr := json.Unmarshal(responseBody, &data)
+		if unmErr != nil {
+			return nil, fmt.Errorf("ошибка преобразования ответа: %w", unmErr)
 		}
 
 		if data.Error.Code != 0 {
-			return messages, &data.Error
+			return nil, &data.Error
 		}
 
 		messages = append(messages, data.Result.Data...)
@@ -504,7 +524,7 @@ func (c *Client) GetOfflineMessagesReport(dateFrom time.Time, dateTill time.Time
 		}
 	}
 
-	return messages, err
+	return messages, nil
 }
 
 type GetCallsRequestParams struct {
@@ -551,7 +571,7 @@ type CallInfo struct {
 	TalkDuration                  int64            `json:"talk_duration"`
 	CleanTalkDuration             int64            `json:"clean_talk_duration"`
 	TotalDuration                 int64            `json:"total_duration"`
-	PostprocessDuration           int64            `json:"postprocess_duration"`
+	PostProcessDuration           int64            `json:"postprocess_duration"`
 	UaClientID                    string           `json:"ua_client_id"`
 	YmClientID                    string           `json:"ym_client_id"`
 	SaleDate                      string           `json:"sale_date"`
@@ -600,10 +620,10 @@ type CallInfo struct {
 	UtmTerm                       string           `json:"utm_term"`
 	UtmContent                    string           `json:"utm_content"`
 	UtmCampaign                   string           `json:"utm_campaign"`
-	OpenstatAd                    string           `json:"openstat_ad"`
-	OpenstatCampaign              string           `json:"openstat_campaign"`
-	OpenstatService               string           `json:"openstat_service"`
-	OpenstatSource                string           `json:"openstat_source"`
+	OpenStatAd                    string           `json:"openstat_ad"`
+	OpenStatCampaign              string           `json:"openstat_campaign"`
+	OpenStatService               string           `json:"openstat_service"`
+	OpenStatSource                string           `json:"openstat_source"`
 	EqUtmSource                   string           `json:"eq_utm_source"`
 	EqUtmMedium                   string           `json:"eq_utm_medium"`
 	EqUtmTerm                     string           `json:"eq_utm_term"`
@@ -706,10 +726,10 @@ type OfflineMessageInfo struct {
 	UtmTerm                  string           `json:"utm_term"`
 	UtmContent               string           `json:"utm_content"`
 	UtmCampaign              string           `json:"utm_campaign"`
-	OpenstatAd               string           `json:"openstat_ad"`
-	OpenstatCampaign         string           `json:"openstat_campaign"`
-	OpenstatService          string           `json:"openstat_service"`
-	OpenstatSource           string           `json:"openstat_source"`
+	OpenStatAd               string           `json:"openstat_ad"`
+	OpenStatCampaign         string           `json:"openstat_campaign"`
+	OpenStatService          string           `json:"openstat_service"`
+	OpenStatSource           string           `json:"openstat_source"`
 	EqUtmSource              string           `json:"eq_utm_source"`
 	EqUtmMedium              string           `json:"eq_utm_medium"`
 	EqUtmTerm                string           `json:"eq_utm_term"`

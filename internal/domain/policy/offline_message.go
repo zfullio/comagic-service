@@ -3,6 +3,7 @@ package policy
 import (
 	"Comagic/internal/domain/service"
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -20,7 +21,7 @@ func (cp OfflineMessagePolicy) PushOfflineMessageToBQ(ctx context.Context, dateF
 
 	err := cp.Service.PushOfflineMessagesToBQ(ctx, dateFromOnlyDate, dateTillOnlyDate, fields, bucketName)
 	if err != nil {
-		return err
+		return fmt.Errorf("service push offline messages to bq: %w", err)
 	}
 
 	return nil

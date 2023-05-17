@@ -11,6 +11,8 @@ import (
 )
 
 func SendFile(ctx context.Context, bucket *storage.BucketHandle, filename string) error {
+	var timeout = time.Minute * 3
+
 	f, err := os.Open(filename)
 	if err != nil {
 		return fmt.Errorf("os.Open: %w", err)
@@ -23,7 +25,7 @@ func SendFile(ctx context.Context, bucket *storage.BucketHandle, filename string
 		}
 	}(f)
 
-	ctxWithTimeout, cancel := context.WithTimeout(ctx, 3*time.Minute)
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	items := strings.Split(filename, "/")

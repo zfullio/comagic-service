@@ -3,6 +3,7 @@ package policy
 import (
 	"Comagic/internal/domain/service"
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -20,7 +21,7 @@ func (cp CallPolicy) PushCallsToBQ(ctx context.Context, dateFrom time.Time, date
 
 	err := cp.Service.PushCallsToBQ(ctx, dateFromOnlyDate, dateTillOnlyDate, fields, bucketName)
 	if err != nil {
-		return err
+		return fmt.Errorf("service push calls to bq: %w", err)
 	}
 
 	return nil

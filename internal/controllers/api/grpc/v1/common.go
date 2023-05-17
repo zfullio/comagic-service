@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -12,7 +13,7 @@ const msgMethodFinished = "Завершено"
 func pbDateNormalize(s string) (time.Time, error) {
 	date, err := time.Parse(time.DateOnly, s)
 	if err != nil {
-		return time.Time{}, err
+		return time.Time{}, fmt.Errorf("time.Parse: %w", err)
 	}
 
 	return date, nil

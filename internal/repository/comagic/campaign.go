@@ -22,23 +22,23 @@ func NewCampaignRepository(tracking comagic.Client, logger *zerolog.Logger) *cam
 	}
 }
 
-func (cr *campaignRepository) GetWithFilter(fields []string, filter comagic.Filter) (campaigns []entity.Campaign, err error) {
+func (cr *campaignRepository) GetWithFilter(fields []string, filter comagic.Filter) ([]entity.Campaign, error) {
 	cr.logger.Trace().Msg("GetWithFilter")
 
 	data, err := cr.client.GetCampaigns(fields, filter)
 	if err != nil {
-		return campaigns, fmt.Errorf("ошибка получения кампаний: %w", err)
+		return nil, fmt.Errorf("ошибка получения кампаний: %w", err)
 	}
 
-	campaignsRepo := data.Result.Data
+	campaigns := make([]entity.Campaign, 0, len(data.Result.Data))
 	t := time.Now()
 
-	for i := 0; i < len(campaignsRepo); i++ {
-		item := newCampaign(campaignsRepo[i], t)
+	for i := 0; i < len(data.Result.Data); i++ {
+		item := newCampaign(data.Result.Data[i], t)
 		campaigns = append(campaigns, *item)
 	}
 
-	return campaigns, err
+	return campaigns, nil
 }
 
 func newCampaign(campaign comagic.CampaignInfo, dateUpdate time.Time) *entity.Campaign {

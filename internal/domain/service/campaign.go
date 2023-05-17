@@ -33,12 +33,12 @@ func NewCampaignService(tracking CampaignRepositoryTracking, bq CampaignReposito
 	}
 }
 
-func (s *CampaignService) GetCampaigns(fields []string, filter comagic.Filter) (campaigns []entity.Campaign, err error) {
+func (s *CampaignService) GetCampaigns(fields []string, filter comagic.Filter) ([]entity.Campaign, error) {
 	s.logger.Info().Msg("GetCampaigns")
 
-	campaigns, err = s.tracking.GetWithFilter(fields, filter)
+	campaigns, err := s.tracking.GetWithFilter(fields, filter)
 	if err != nil {
-		return campaigns, fmt.Errorf("ошибка получения кампаний: %w", err)
+		return nil, fmt.Errorf("ошибка получения кампаний: %w", err)
 	}
 
 	return campaigns, nil

@@ -23,15 +23,17 @@ func NewOfflineMessageRepository(tracking *cm.Client, logger *zerolog.Logger) *o
 	}
 }
 
-func (or offlineMessageRepository) GetByDate(dateFrom time.Time, dateTill time.Time, fields []string) (messages []entity.OfflineMessage, err error) {
+func (or offlineMessageRepository) GetByDate(dateFrom time.Time, dateTill time.Time, fields []string) ([]entity.OfflineMessage, error) {
 	or.logger.Trace().Msgf("GetByDate: %v, %v", dateFrom, dateTill)
 
 	messagesFromRepo, err := or.client.GetOfflineMessagesReport(dateFrom, dateTill, fields)
 	if err != nil {
-		return messages, fmt.Errorf("ошибка получения заявок: %w", err)
+		return nil, fmt.Errorf("ошибка получения заявок: %w", err)
 	}
 
+	messages := make([]entity.OfflineMessage, 0, len(messagesFromRepo))
 	t := time.Now()
+
 	for i := 0; i < len(messagesFromRepo); i++ {
 		item := newOfflineMessage(messagesFromRepo[i], t)
 		messages = append(messages, *item)
@@ -103,10 +105,10 @@ func newOfflineMessage(message cm.OfflineMessageInfo, dateUpdate time.Time) *ent
 		UtmTerm:                  message.UtmTerm,
 		UtmContent:               message.UtmContent,
 		UtmCampaign:              message.UtmCampaign,
-		OpenStatAd:               message.OpenstatAd,
-		OpenStatCampaign:         message.OpenstatCampaign,
-		OpenStatService:          message.OpenstatService,
-		OpenStatSource:           message.OpenstatSource,
+		OpenStatAd:               message.OpenStatAd,
+		OpenStatCampaign:         message.OpenStatCampaign,
+		OpenStatService:          message.OpenStatService,
+		OpenStatSource:           message.OpenStatSource,
 		EqUtmSource:              message.EqUtmSource,
 		EqUtmMedium:              message.EqUtmMedium,
 		EqUtmTerm:                message.EqUtmTerm,

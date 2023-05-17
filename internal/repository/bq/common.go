@@ -38,7 +38,7 @@ func CreateTable(ctx context.Context, schemaDTO any, table *bigquery.Table, fiel
 	}
 
 	if err := table.Create(ctx, metadata); err != nil {
-		return err
+		return fmt.Errorf("bigquery error: %w", err)
 	}
 
 	return nil
@@ -50,16 +50,16 @@ func DeleteByDateColumn(ctx context.Context, bqClient *bigquery.Client, table *b
 
 	job, err := q.Run(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("query error: %w", err)
 	}
 
 	status, err := job.Wait(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("job error: %w", err)
 	}
 
 	if err := status.Err(); err != nil {
-		return err
+		return fmt.Errorf("status error: %w", err)
 	}
 
 	return nil
@@ -92,11 +92,11 @@ func SendFromCS(ctx context.Context, schemaDTO any, table *bigquery.Table, bucke
 
 	status, err := job.Wait(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("job error: %w", err)
 	}
 
 	if err := status.Err(); err != nil {
-		return err
+		return fmt.Errorf("status error: %w", err)
 	}
 
 	return nil

@@ -23,13 +23,15 @@ func NewCallRepository(tracking *cm.Client, logger *zerolog.Logger) *callReposit
 	}
 }
 
-func (cr callRepository) GetByDate(dateFrom time.Time, dateTill time.Time, fields []string) (calls []entity.Call, err error) {
+func (cr callRepository) GetByDate(dateFrom time.Time, dateTill time.Time, fields []string) ([]entity.Call, error) {
 	cr.logger.Trace().Msgf("GetByDate: %v -- %v", dateFrom.Format(time.DateOnly), dateTill.Format(time.DateOnly))
 
-	callsFromRepo, err := cr.client.GetCallsReport(dateFrom, dateTill, fields)
-	if err != nil {
-		return calls, fmt.Errorf("ошибка получения звонков: %w", err)
+	callsFromRepo, gErr := cr.client.GetCallsReport(dateFrom, dateTill, fields)
+	if gErr != nil {
+		return nil, fmt.Errorf("ошибка получения звонков: %w", gErr)
 	}
+
+	calls := make([]entity.Call, 0, len(callsFromRepo))
 
 	t := time.Now()
 	for i := 0; i < len(callsFromRepo); i++ {
@@ -68,7 +70,7 @@ func newCall(call cm.CallInfo, dateUpdate time.Time) *entity.Call {
 		TalkDuration:                  call.TalkDuration,
 		CleanTalkDuration:             call.CleanTalkDuration,
 		TotalDuration:                 call.TotalDuration,
-		PostprocessDuration:           call.PostprocessDuration,
+		PostprocessDuration:           call.PostProcessDuration,
 		UaClientID:                    call.UaClientID,
 		YmClientID:                    call.YmClientID,
 		SaleDate:                      call.SaleDate,
@@ -117,10 +119,10 @@ func newCall(call cm.CallInfo, dateUpdate time.Time) *entity.Call {
 		UtmTerm:                       call.UtmTerm,
 		UtmContent:                    call.UtmContent,
 		UtmCampaign:                   call.UtmCampaign,
-		OpenStatAd:                    call.OpenstatAd,
-		OpenStatCampaign:              call.OpenstatCampaign,
-		OpenStatService:               call.OpenstatService,
-		OpenStatSource:                call.OpenstatSource,
+		OpenStatAd:                    call.OpenStatAd,
+		OpenStatCampaign:              call.OpenStatCampaign,
+		OpenStatService:               call.OpenStatService,
+		OpenStatSource:                call.OpenStatSource,
 		EqUtmSource:                   call.EqUtmSource,
 		EqUtmMedium:                   call.EqUtmMedium,
 		EqUtmTerm:                     call.EqUtmTerm,

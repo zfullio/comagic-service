@@ -43,12 +43,12 @@ func NewCallService(tracking CallRepositoryTracking, bq CallRepositoryBQ, cs Cal
 	}
 }
 
-func (s CallService) GetByDate(dateFrom time.Time, dateTill time.Time, fields []string) (calls []entity.Call, err error) {
+func (s CallService) GetByDate(dateFrom time.Time, dateTill time.Time, fields []string) ([]entity.Call, error) {
 	s.logger.Trace().Msg("GetByDate")
 
-	calls, err = s.tracking.GetByDate(dateFrom, dateTill, fields)
-	if err != nil {
-		return calls, err
+	calls, gErr := s.tracking.GetByDate(dateFrom, dateTill, fields)
+	if gErr != nil {
+		return calls, fmt.Errorf("tracking err: %w", gErr)
 	}
 
 	return calls, nil

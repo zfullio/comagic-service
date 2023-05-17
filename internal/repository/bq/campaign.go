@@ -4,6 +4,7 @@ import (
 	"Comagic/internal/domain/entity"
 	"cloud.google.com/go/bigquery"
 	"context"
+	"fmt"
 	"github.com/rs/zerolog"
 	"time"
 )
@@ -40,7 +41,7 @@ func (cr campaignRepository) SendAny(datasetID string, tableID string, campaigns
 
 	u := table.Inserter()
 	if err := u.Put(context.Background(), campaignsDTO); err != nil {
-		return err
+		return fmt.Errorf("bigquery error: %w", err)
 	}
 
 	return nil
@@ -107,7 +108,7 @@ func (cr campaignRepository) SendCampaignsConditions(datasetID string, tableID s
 	u := table.Inserter()
 
 	if err := u.Put(context.Background(), conditions); err != nil {
-		return err
+		return fmt.Errorf("bigquery error: %w", err)
 	}
 
 	return nil
