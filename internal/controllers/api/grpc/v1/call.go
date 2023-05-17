@@ -16,7 +16,7 @@ import (
 )
 
 func (s Server) PushCallsToBQ(ctx context.Context, req *pb.PushCallsToBQRequest) (*pb.PushCallsToBQResponse, error) {
-	methodLogger := s.logger.With().Str("method", "PushCallsToBQ").Str("client", req.BqConfig.ProjectID).Logger()
+	methodLogger := s.logger.With().Str("method", "PushCallsToBQ").Str("client", req.BqConfig.ProjectId).Logger()
 
 	methodLogger.Info().Msg(msgMethodPrepared)
 
@@ -25,21 +25,21 @@ func (s Server) PushCallsToBQ(ctx context.Context, req *pb.PushCallsToBQRequest)
 	bqServiceKey := s.cfg.KeysDir + "/" + req.BqConfig.ServiceKey
 	csServiceKey := s.cfg.KeysDir + "/" + req.CsConfig.ServiceKey
 
-	dateFrom, err := pbDateNormalize(req.DateFrom)
+	dateFrom, err := pbDateNormalize(req.Period.DateFrom)
 	if err != nil {
 		methodLogger.Error().Err(err).Msg(msgErrMethod)
 
 		return &pb.PushCallsToBQResponse{
-			IsOK: false,
+			IsOk: false,
 		}, fmt.Errorf("wrong value in field 'dateFrom' : %w", err)
 	}
 
-	dateTill, err := pbDateNormalize(req.DateTill)
+	dateTill, err := pbDateNormalize(req.Period.DateTill)
 	if err != nil {
 		methodLogger.Error().Err(err).Msg(msgErrMethod)
 
 		return &pb.PushCallsToBQResponse{
-			IsOK: false,
+			IsOk: false,
 		}, fmt.Errorf("wrong value in field 'dateTill' : %w", err)
 	}
 
@@ -64,12 +64,12 @@ func (s Server) PushCallsToBQ(ctx context.Context, req *pb.PushCallsToBQRequest)
 	clComagic := comagic.NewClient(comagic.DataAPI, s.cfg.Version, req.ComagicToken)
 	cmCallRepo := cmRepo.NewCallRepository(clComagic, &methodLogger)
 
-	bqClient, err := bigquery.NewClient(ctx, req.BqConfig.ProjectID, option.WithCredentialsFile(bqServiceKey))
+	bqClient, err := bigquery.NewClient(ctx, req.BqConfig.ProjectId, option.WithCredentialsFile(bqServiceKey))
 	if err != nil {
 		methodLogger.Error().Err(err).Msg(msgErrMethod)
 
 		return &pb.PushCallsToBQResponse{
-			IsOK: false,
+			IsOk: false,
 		}, fmt.Errorf("ошибка формирования клиента Big Query: %s", err)
 	}
 
@@ -80,14 +80,14 @@ func (s Server) PushCallsToBQ(ctx context.Context, req *pb.PushCallsToBQRequest)
 		}
 	}(bqClient)
 
-	bqCallRepo := cmBQ.NewCallRepository(bqClient, req.BqConfig.DatasetID, req.BqConfig.TableID, &methodLogger)
+	bqCallRepo := cmBQ.NewCallRepository(bqClient, req.BqConfig.DatasetId, req.BqConfig.TableId, &methodLogger)
 
 	csClient, err := storage.NewClient(ctx, option.WithCredentialsFile(csServiceKey))
 	if err != nil {
 		methodLogger.Error().Err(err).Msg(msgErrMethod)
 
 		return &pb.PushCallsToBQResponse{
-			IsOK: false,
+			IsOk: false,
 		}, fmt.Errorf("ошибка формирования клиента Cloud Storage: %s", err)
 	}
 
@@ -110,11 +110,11 @@ func (s Server) PushCallsToBQ(ctx context.Context, req *pb.PushCallsToBQRequest)
 		methodLogger.Error().Err(err).Msg(msgErrMethod)
 
 		return &pb.PushCallsToBQResponse{
-			IsOK: false,
+			IsOk: false,
 		}, fmt.Errorf("ошибка выполнения: %s", err)
 	}
 
 	return &pb.PushCallsToBQResponse{
-		IsOK: true,
+		IsOk: true,
 	}, nil
 }
