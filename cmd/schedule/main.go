@@ -89,22 +89,24 @@ func getReport(ctx context.Context, wg *sync.WaitGroup, c pb.ComagicServiceClien
 		callsReq, err := c.PushCallsToBQ(ctx, &pb.PushCallsToBQRequest{
 			ComagicToken: report.ComagicToken,
 			BqConfig: &pb.BqConfig{
-				ProjectID:  report.ProjectID,
-				DatasetID:  report.DatasetID,
-				TableID:    report.CallsTable,
+				ProjectId:  report.ProjectID,
+				DatasetId:  report.DatasetID,
+				TableId:    report.CallsTable,
 				ServiceKey: report.GoogleServiceKey,
 			},
 			CsConfig: &pb.CsConfig{
 				ServiceKey: report.GoogleServiceKey,
 				BucketName: report.BucketName,
 			},
-			DateFrom: dateFrom,
-			DateTill: dateTill,
+			Period: &pb.Period{
+				DateFrom: dateFrom,
+				DateTill: dateTill,
+			},
 		})
 		if err != nil {
 			log.Println(fmt.Errorf("%s // %w", report.ObjectName, err))
 		} else {
-			log.Printf("%s // Статус отчета по звонкам: %v ", report.ObjectName, callsReq.IsOK)
+			log.Printf("%s // Статус отчета по звонкам: %v ", report.ObjectName, callsReq.IsOk)
 		}
 	}
 
@@ -112,22 +114,24 @@ func getReport(ctx context.Context, wg *sync.WaitGroup, c pb.ComagicServiceClien
 		messagesReq, err := c.PushOfflineMessagesToBQ(ctx, &pb.PushOfflineMessagesToBQRequest{
 			ComagicToken: report.ComagicToken,
 			BqConfig: &pb.BqConfig{
-				ProjectID:  report.ProjectID,
-				DatasetID:  report.DatasetID,
-				TableID:    report.OfflineMessageTable,
+				ProjectId:  report.ProjectID,
+				DatasetId:  report.DatasetID,
+				TableId:    report.OfflineMessageTable,
 				ServiceKey: report.GoogleServiceKey,
 			},
 			CsConfig: &pb.CsConfig{
 				ServiceKey: report.GoogleServiceKey,
 				BucketName: report.BucketName,
 			},
-			DateFrom: dateFrom,
-			DateTill: dateTill,
+			Period: &pb.Period{
+				DateFrom: dateFrom,
+				DateTill: dateTill,
+			},
 		})
 		if err != nil {
 			log.Println(fmt.Errorf("%s // %w", report.ObjectName, err))
 		} else {
-			log.Printf("%s // Статус отчета по заявкам: %v ", report.ObjectName, messagesReq.IsOK)
+			log.Printf("%s // Статус отчета по заявкам: %v ", report.ObjectName, messagesReq.IsOk)
 		}
 	}
 }

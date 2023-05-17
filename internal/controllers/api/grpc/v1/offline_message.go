@@ -16,7 +16,7 @@ import (
 )
 
 func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOfflineMessagesToBQRequest) (*pb.PushOfflineMessagesToBQResponse, error) {
-	methodLogger := s.logger.With().Str("method", "PushOfflineMessagesToBQ").Str("client", req.BqConfig.ProjectID).Logger()
+	methodLogger := s.logger.With().Str("method", "PushOfflineMessagesToBQ").Str("client", req.BqConfig.ProjectId).Logger()
 
 	methodLogger.Info().Msg(msgMethodPrepared)
 
@@ -25,21 +25,21 @@ func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOffline
 	bqServiceKey := s.cfg.KeysDir + "/" + req.BqConfig.ServiceKey
 	csServiceKey := s.cfg.KeysDir + "/" + req.CsConfig.ServiceKey
 
-	dateFrom, err := pbDateNormalize(req.DateFrom)
+	dateFrom, err := pbDateNormalize(req.Period.DateFrom)
 	if err != nil {
 		methodLogger.Error().Err(err).Msg(msgErrMethod)
 
 		return &pb.PushOfflineMessagesToBQResponse{
-			IsOK: false,
+			IsOk: false,
 		}, fmt.Errorf("wrong value in field 'dateFrom' : %w", err)
 	}
 
-	dateTill, err := pbDateNormalize(req.DateTill)
+	dateTill, err := pbDateNormalize(req.Period.DateTill)
 	if err != nil {
 		methodLogger.Error().Err(err).Msg(msgErrMethod)
 
 		return &pb.PushOfflineMessagesToBQResponse{
-			IsOK: false,
+			IsOk: false,
 		}, fmt.Errorf("wrong value in field 'dateTill' : %w", err)
 	}
 
@@ -124,12 +124,12 @@ func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOffline
 	clComagic := comagic.NewClient(comagic.DataAPI, s.cfg.Version, req.ComagicToken)
 	cmOfflineMessageRepo := cmRepo.NewOfflineMessageRepository(clComagic, &methodLogger)
 
-	bqClient, err := bigquery.NewClient(ctx, req.BqConfig.ProjectID, option.WithCredentialsFile(bqServiceKey))
+	bqClient, err := bigquery.NewClient(ctx, req.BqConfig.ProjectId, option.WithCredentialsFile(bqServiceKey))
 	if err != nil {
 		methodLogger.Error().Err(err).Msg(msgErrMethod)
 
 		return &pb.PushOfflineMessagesToBQResponse{
-			IsOK: false,
+			IsOk: false,
 		}, fmt.Errorf("ошибка формирования клиента Big Query: %s", err)
 	}
 
@@ -140,14 +140,14 @@ func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOffline
 		}
 	}(bqClient)
 
-	bqOfflineMessageRepo := cmBQ.NewOfflineMessageRepository(bqClient, req.BqConfig.DatasetID, req.BqConfig.TableID, &methodLogger)
+	bqOfflineMessageRepo := cmBQ.NewOfflineMessageRepository(bqClient, req.BqConfig.DatasetId, req.BqConfig.TableId, &methodLogger)
 
 	csClient, err := storage.NewClient(ctx, option.WithCredentialsFile(csServiceKey))
 	if err != nil {
 		methodLogger.Error().Err(err).Msg(msgErrMethod)
 
 		return &pb.PushOfflineMessagesToBQResponse{
-			IsOK: false,
+			IsOk: false,
 		}, fmt.Errorf("ошибка формирования клиента Cloud Storage: %s", err)
 	}
 
@@ -170,11 +170,11 @@ func (s Server) PushOfflineMessagesToBQ(ctx context.Context, req *pb.PushOffline
 		methodLogger.Error().Err(err).Msg(msgErrMethod)
 
 		return &pb.PushOfflineMessagesToBQResponse{
-			IsOK: false,
+			IsOk: false,
 		}, fmt.Errorf("ошибка выполнения: %s", err)
 	}
 
 	return &pb.PushOfflineMessagesToBQResponse{
-		IsOK: true,
+		IsOk: true,
 	}, nil
 }

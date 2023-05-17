@@ -43,12 +43,12 @@ func NewOfflineMessageService(tracking OfflineMessagesRepositoryTracking, bq Off
 	}
 }
 
-func (s OfflineMessageService) GetByDate(dateFrom time.Time, dateTill time.Time, fields []string) (messages []entity.OfflineMessage, err error) {
+func (s OfflineMessageService) GetByDate(dateFrom time.Time, dateTill time.Time, fields []string) ([]entity.OfflineMessage, error) {
 	s.logger.Trace().Msg("GetByDate")
 
-	messages, err = s.tracking.GetByDate(dateFrom, dateTill, fields)
+	messages, err := s.tracking.GetByDate(dateFrom, dateTill, fields)
 	if err != nil {
-		return messages, err
+		return messages, fmt.Errorf("tracking err: %w", err)
 	}
 
 	return messages, nil
