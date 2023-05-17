@@ -10,15 +10,18 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
-	"os"
 	"sync"
 	"time"
 )
+
+const version = "1.1.0"
 
 func main() {
 	var fileConfig = flag.String("f", "schedule_config.yml", "configuration file")
 
 	flag.Parse()
+
+	fmt.Printf("version: %s\n", version)
 
 	cfg, err := config.NewScheduleConfig(*fileConfig)
 	if err != nil {
@@ -49,8 +52,6 @@ func main() {
 }
 
 func scheduleRun(cfg config.ScheduleConfig) {
-	defer GracefulShutdown()
-
 	conn, err := grpc.Dial(fmt.Sprintf("%s:%v", cfg.GRPC.IP, cfg.GRPC.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
@@ -134,12 +135,4 @@ func getReport(ctx context.Context, wg *sync.WaitGroup, c pb.ComagicServiceClien
 			log.Printf("%s // Статус отчета по заявкам: %v ", report.ObjectName, messagesReq.IsOk)
 		}
 	}
-}
-
-func GracefulShutdown() {
-	if err := recover(); err != nil {
-		fmt.Println("Критическая ошибка:", err)
-	}
-
-	os.Exit(0)
 }
