@@ -17,10 +17,11 @@ type TG struct {
 }
 
 type ServerConfig struct {
-	KeysDir string `yaml:"keys_dir" env:"KEYS_DIR"`
-	GRPC    `yaml:"grpc"`
-	Comagic `yaml:"comagic"`
-	TG      `yaml:"tg"`
+	KeysDir        string `yaml:"keys_dir" env:"KEYS_DIR"`
+	GRPC           `yaml:"grpc"`
+	Comagic        `yaml:"comagic"`
+	TG             `yaml:"tg"`
+	PrometheusAddr string `yaml:"prometheus_addr" env:"PROMETHEUS_ADDR"`
 }
 
 type GRPC struct {

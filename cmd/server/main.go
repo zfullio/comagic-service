@@ -3,6 +3,7 @@ package main
 import (
 	"Comagic/internal/app/server"
 	"Comagic/internal/config"
+	"Comagic/pkg/metrics"
 	"context"
 	"flag"
 	"github.com/nikoksr/notify"
@@ -57,6 +58,18 @@ func main() {
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Ошибка в файле настроек")
 	}
+
+	go func() {
+		if cfg.PrometheusAddr != "" {
+			logger.Info().Msg("Сервис Prometheus запущен")
+			err := metrics.Listen(cfg.PrometheusAddr)
+			if err != nil {
+				logger.Fatal().Err(err).Msg("Ошибка в сервисе: Prometheus")
+			}
+		} else {
+			logger.Info().Msg("Сервис Prometheus не запущен")
+		}
+	}()
 
 	telegramService, err := telegram.New(cfg.TG.Token)
 	if err != nil {
